@@ -261,7 +261,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(239, 68, 68, 0.25);
+      background: rgba(239, 68, 68, 0.3);
       border: 1px solid var(--danger);
       color: #fca5a5;
       padding: 12px 18px;
@@ -433,7 +433,7 @@
           
           <div class="btn-row">
             <button class="btn-primary" onclick="document.getElementById('fileCsv').click()">📂 Importar CSV</button>
-            <button class="btn-dark" onclick="imprimirLaudoTimbrado()">🖨️️ Exportar PDF</button>
+            <button class="btn-dark" onclick="imprimirLaudoTimbrado()">🖨 Exportar PDF</button>
           </div>
         </div>
 
@@ -500,10 +500,10 @@
           </div>
           <div id="viewport3d"></div>
           <div class="viewport-blocked-msg" id="msg3dBloqueado">
-            ⛔ VISUALIZAÇÃO 3D BLOQUEADA<br>
-            <span style="font-size: 0.72rem; color: #cbd5e1;">Trecho reprovado na Etapa 1 (Concepção de Projeto)</span>
+            ⛔ CONDUTO EM SOBRECARGA / BLOQUEADO<br>
+            <span style="font-size: 0.72rem; color: #cbd5e1;" id="msg3dDetalhe">Inconformidade hidráulica ou geométrica</span>
           </div>
-          <div class="viewport-help">Rotação 360° com arrasto | Zoom no ecrã</div>
+          <div class="viewport-help">Rotação 360° | Zoom disponível</div>
         </div>
       </div>
     </div>
@@ -603,8 +603,15 @@
       return Q_calc - Q;
     }
 
+    // Capacidade a tubo cheio (theta = 2pi)
+    function calcQCheio(D, I0, n) {
+      const A_cheio = (Math.PI * Math.pow(D, 2)) / 4;
+      const Rh_cheio = D / 4;
+      return (1.0 / n) * A_cheio * Math.pow(Rh_cheio, 2/3) * Math.sqrt(I0);
+    }
+
     // --- MOTORES NUMÉRICOS (MÓDULO 3) ---
-    function resolverNewton(D, I0, n, Q, tol = 1e-7, maxIt = 100) {
+    function resolverNewton(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
       let theta = Math.PI;
       const h = 1e-5;
       let it = 0;
@@ -615,14 +622,14 @@
         if (Math.abs(df) < 1e-12) break;
         const delta = f / df;
         theta -= delta;
-        if (theta <= 0.005) theta = 0.005;
+        if (theta <= 0.01) theta = 0.01;
         if (theta >= 2 * Math.PI * 0.999) theta = 2 * Math.PI * 0.999;
         if (Math.abs(delta) < tol) break;
       }
-      return { theta, iteracoes: it };
+      return { theta, iteracoes: it, convergiu: it < maxIt };
     }
 
-    function resolverSecante(D, I0, n, Q, tol = 1e-7, maxIt = 100) {
+    function resolverSecante(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
       let x0 = Math.PI * 0.8, x1 = Math.PI * 1.2, it = 0;
       for (it = 1; it <= maxIt; it++) {
         const f0 = fManning(x0, D, I0, n, Q);
@@ -630,14 +637,14 @@
         if (Math.abs(f1) < tol || Math.abs(f1 - f0) < 1e-12) break;
         const x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
         x0 = x1; x1 = x2;
-        if (x1 <= 0.005) x1 = 0.005;
+        if (x1 <= 0.01) x1 = 0.01;
         if (x1 >= 2 * Math.PI * 0.999) x1 = 2 * Math.PI * 0.999;
       }
-      return { theta: x1, iteracoes: it };
+      return { theta: x1, iteracoes: it, convergiu: it < maxIt };
     }
 
-    function resolverBisseccao(D, I0, n, Q, tol = 1e-7, maxIt = 100) {
-      let a = 0.005, b = 2 * Math.PI * 0.999, m = 0, it = 0;
+    function resolverBisseccao(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
+      let a = 0.01, b = 2 * Math.PI * 0.999, m = 0, it = 0;
       for (it = 1; it <= maxIt; it++) {
         m = 0.5 * (a + b);
         const fm = fManning(m, D, I0, n, Q);
@@ -645,7 +652,7 @@
         if (fManning(a, D, I0, n, Q) * fm < 0) b = m;
         else a = m;
       }
-      return { theta: m, iteracoes: it };
+      return { theta: m, iteracoes: it, convergiu: it < maxIt };
     }
 
     // --- AUDITORIA EM DUAS ETAPAS ---
@@ -654,6 +661,7 @@
       const Q_m3s = t.q / 1000.0;
       const metodo = document.getElementById("selectMetodo").value;
 
+      // 1. ETAPA 1: VALIDAÇÃO DE PROJETO
       const passDN = t.dn >= 100;
       const I_min = 0.0055 * Math.pow(t.q, -0.47);
       const passDecliv = t.decliv >= I_min;
@@ -672,6 +680,19 @@
         };
       }
 
+      // Verificação de capacidade hidráulica máxima
+      const Q_cheio = calcQCheio(D, t.decliv, t.n);
+      if (Q_m3s > Q_cheio) {
+        return {
+          etapa1Valida: true,
+          passDN, passDecliv, passGravidade, I_min,
+          bloqueado: true,
+          afogado: true,
+          motivoBloqueio: `Vazão (${t.q.toFixed(2)} L/s) excede a capacidade máxima de escoamento livre (${(Q_cheio*1000).toFixed(2)} L/s). Risco iminente de refluxo e funcionamento sob pressão forçada.`
+        };
+      }
+
+      // 2. ETAPA 2: AUDITORIA HIDRÁULICA
       let sol;
       if (metodo === "secante") sol = resolverSecante(D, t.decliv, t.n, Q_m3s);
       else if (metodo === "bisseccao") sol = resolverBisseccao(D, t.decliv, t.n, Q_m3s);
@@ -690,6 +711,7 @@
       return {
         etapa1Valida: true,
         bloqueado: false,
+        afogado: false,
         passDN, passDecliv, passGravidade, I_min,
         y, yd, V, tau, iteracoes: sol.iteracoes,
         passYd, passTau, passV,
@@ -713,19 +735,20 @@
       const statusBadge = document.getElementById("statusGeralBadge");
       const parecerBox = document.getElementById("parecerTexto");
       const msg3d = document.getElementById("msg3dBloqueado");
+      const msg3dDetalhe = document.getElementById("msg3dDetalhe");
 
       if (res.bloqueado) {
         valBox.style.background = "rgba(239, 68, 68, 0.15)";
         valBox.style.border = "1px solid var(--danger)";
         valBox.style.color = "#fca5a5";
         valBox.innerHTML = `
-          <strong>❌ PROJETO REPROVADO NA CONCEPÇÃO:</strong><br>
-          ${res.motivoBloqueio}.<br>
-          <span style="font-size: 0.72rem; color: #f87171;">A Etapa 2 (Auditoria Hidráulica) foi suspensa por inconformidade física/normativa de projeto.</span>
+          <strong>❌ REPROVADO NA CONCEPÇÃO DE PROJETO:</strong><br>
+          ${res.motivoBloqueio}<br>
+          <span style="font-size: 0.72rem; color: #f87171;">A Etapa 2 (Auditoria Hidráulica) foi bloqueada para evitar simulação em trecho inviável.</span>
         `;
 
         statusBadge.className = "badge-status badge-fail";
-        statusBadge.innerText = "PROJETO REPROVADO";
+        statusBadge.innerText = res.afogado ? "CONDUTO AFOGADO" : "PROJETO REPROVADO";
 
         document.getElementById("kpiY").innerText = "--";
         document.getElementById("kpiYRatio").innerText = "Bloqueado";
@@ -738,11 +761,11 @@
           `Identificação: ${t.id}\n` +
           `--------------------------------------------------\n` +
           `[STATUS: AUDITORIA SUSPENSA]\n\n` +
-          `O trecho não atende aos requisitos preliminares de projeto da NBR 9649.\n` +
-          `Motivo determinante: ${res.motivoBloqueio}.\n\n` +
-          `RECOMENDAÇÃO: Corrigir a declividade ou cotas antes de qualquer assentamento.`;
+          `Motivo do bloqueio: ${res.motivoBloqueio}\n\n` +
+          `RECOMENDAÇÃO: Redimensionar o diâmetro da tubulação ou elevar a declividade do trecho.`;
 
         msg3d.style.display = "block";
+        msg3dDetalhe.innerText = res.afogado ? "Capacidade excedida (Conduto Sob Pressão)" : "Inconformidade de Projeto";
         atualizarVisualizacao3D(t.dn / 1000.0, 0);
         return;
       }
@@ -842,7 +865,7 @@
 
       if (res.bloqueado) {
         et1.innerHTML = `<p style="color: #991b1b; font-weight: bold;">✖ REPROVADO: ${res.motivoBloqueio}</p>`;
-        et2.innerHTML = `<p style="color: #64748b;">Auditoria hidráulica suspensa por inconformidade de projeto geométrico.</p>`;
+        et2.innerHTML = `<p style="color: #64748b;">Auditoria hidráulica suspensa por inconformidade de projeto ou sobrecarga.</p>`;
         tabKpis.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b;">Sem telemetria — Trecho não qualificado</td></tr>`;
         statusFinal.className = "timbrado-status timbrado-reprovado";
         statusFinal.innerText = "PARECER: PROJETO REPROVADO NA CONCEPÇÃO";
@@ -942,11 +965,11 @@
       document.getElementById("modalLote").style.display = "none";
     }
 
-    // --- VISUALIZADOR 3D ISOMÉTRICO ROBUSTO (THREE.JS) ---
+    // --- VISUALIZADOR 3D COM ISOMETRIA FIXA TRAVADA ---
     let scene, camera, renderer, controls;
-    let waterMesh, lineMaxMesh;
-    const R_TUBO = 1.0;
-    const L_TUBO = 4.2;
+    let main3DGroup, waterMesh;
+    const R_BASE = 1.0;
+    const L_BASE = 4.0;
 
     function init3D() {
       const container = document.getElementById("viewport3d");
@@ -956,9 +979,9 @@
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x040814);
 
-      // Câmara configurada em perspetiva isométrica estável
+      // Câmara frontal ligeiramente elevada
       camera = new THREE.PerspectiveCamera(36, w / h, 0.1, 100);
-      camera.position.set(4.8, 3.2, 4.6);
+      camera.position.set(0, 1.2, 5.8);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(w, h);
@@ -970,25 +993,31 @@
       controls.dampingFactor = 0.05;
       controls.target.set(0, 0, 0);
 
-      // Trava para rotação orbital natural
-      controls.minPolarAngle = 0.3;
-      controls.maxPolarAngle = Math.PI / 2 + 0.1;
+      // Trava para evitar perder o tubo de vista
+      controls.minDistance = 3.5;
+      controls.maxDistance = 8.0;
 
-      // Iluminação de estúdio
+      // Iluminação com reflexo superior
       const ambLight = new THREE.AmbientLight(0xffffff, 0.85);
       scene.add(ambLight);
 
       const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
-      dirLight.position.set(6, 10, 6);
+      dirLight.position.set(5, 8, 5);
       scene.add(dirLight);
 
-      const dirLightBack = new THREE.DirectionalLight(0xffffff, 0.5);
-      dirLightBack.position.set(-6, -4, -6);
+      const dirLightBack = new THREE.DirectionalLight(0xffffff, 0.4);
+      dirLightBack.position.set(-5, -5, -5);
       scene.add(dirLightBack);
 
-      // 1. Tubo Translúcido (Deitado no eixo X)
-      const pipeGeo = new THREE.CylinderGeometry(R_TUBO, R_TUBO, L_TUBO, 48, 1, true);
-      pipeGeo.rotateZ(Math.PI / 2); // Deita o cilindro no eixo horizontal X
+      // GRUPO PRINCIPAL COM ROTAÇÃO ISOMÉTRICA FIXA INICIAL
+      main3DGroup = new THREE.Group();
+      // Inclina 25 graus no eixo X e gira 45 graus no eixo Y:
+      main3DGroup.rotation.set(0.42, -0.78, 0);
+      scene.add(main3DGroup);
+
+      // 1. Tubo Cilindrico ao longo do eixo Z do grupo
+      const pipeGeo = new THREE.CylinderGeometry(R_BASE, R_BASE, L_BASE, 48, 1, true);
+      pipeGeo.rotateX(Math.PI / 2); // Deita o cilindro no eixo Z do grupo
 
       const pipeMat = new THREE.MeshPhysicalMaterial({
         color: 0x94a3b8,
@@ -999,70 +1028,78 @@
         side: THREE.DoubleSide
       });
       const pipeMesh = new THREE.Mesh(pipeGeo, pipeMat);
-      scene.add(pipeMesh);
+      main3DGroup.add(pipeMesh);
 
-      // Anéis metálicos nas extremidades
+      // Anéis nas extremidades
       const ringMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
-      const r1 = new THREE.Mesh(new THREE.TorusGeometry(R_TUBO, 0.035, 16, 64), ringMat);
-      r1.position.set(-L_TUBO / 2, 0, 0); r1.rotateY(Math.PI / 2);
-      scene.add(r1);
+      const r1 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat);
+      r1.position.set(0, 0, -L_BASE / 2);
+      main3DGroup.add(r1);
 
-      const r2 = new THREE.Mesh(new THREE.TorusGeometry(R_TUBO, 0.035, 16, 64), ringMat);
-      r2.position.set(L_TUBO / 2, 0, 0); r2.rotateY(Math.PI / 2);
-      scene.add(r2);
+      const r2 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat);
+      r2.position.set(0, 0, L_BASE / 2);
+      main3DGroup.add(r2);
 
-      // Linhas vermelhas de limite 75%
-      const yLimit = -R_TUBO + (2 * R_TUBO * 0.75); // Cota Y a 75%
-      const zLimit = Math.sqrt(Math.max(0, R_TUBO * R_TUBO - yLimit * yLimit));
-      
+      // Linha tracejada do limite de 75%
+      const yLim = -R_BASE + (2 * R_BASE * 0.75);
+      const xLim = Math.sqrt(Math.max(0, R_BASE * R_BASE - yLim * yLim));
       const lineMat = new THREE.LineDashedMaterial({ color: 0xef4444, dashSize: 0.15, gapSize: 0.1 });
       
-      const p1 = [new THREE.Vector3(-L_TUBO/2, yLimit, zLimit), new THREE.Vector3(L_TUBO/2, yLimit, zLimit)];
-      const lineMesh1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p1), lineMat);
-      lineMesh1.computeLineDistances();
-      scene.add(lineMesh1);
+      const p1 = [new THREE.Vector3(xLim, yLim, -L_BASE/2), new THREE.Vector3(xLim, yLim, L_BASE/2)];
+      const line1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p1), lineMat);
+      line1.computeLineDistances();
+      main3DGroup.add(line1);
 
-      const p2 = [new THREE.Vector3(-L_TUBO/2, yLimit, -zLimit), new THREE.Vector3(L_TUBO/2, yLimit, -zLimit)];
-      const lineMesh2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p2), lineMat);
-      lineMesh2.computeLineDistances();
-      scene.add(lineMesh2);
+      const p2 = [new THREE.Vector3(-xLim, yLim, -L_BASE/2), new THREE.Vector3(-xLim, yLim, L_BASE/2)];
+      const line2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p2), lineMat);
+      line2.computeLineDistances();
+      main3DGroup.add(line2);
 
-      criarAguaUnificada(0.32);
+      atualizarVisualizacao3D(0.15, 0.048);
       animate3D();
     }
 
-    // Geometria Volumétrica Unificada da Água
-    function criarAguaUnificada(yRel) {
+    // Geometria da Água por Perfil Transversal Contínuo
+    function atualizarVisualizacao3D(D, y) {
+      if (!main3DGroup) return;
+
       if (waterMesh) {
-        scene.remove(waterMesh);
+        main3DGroup.remove(waterMesh);
         if (waterMesh.geometry) waterMesh.geometry.dispose();
+        waterMesh = null;
       }
 
-      if (yRel <= 0.01) return; // Tubo seco/bloqueado
+      if (y <= 0.001 || D <= 0) return; // Tubo seco/bloqueado
 
-      const R = R_TUBO * 0.99; // Folga interna para não sobrepor a casca do tubo
-      const L = L_TUBO * 0.995;
-      const y = Math.min(Math.max(yRel, 0.02), 0.98) * (2 * R);
-      const yNivel = -R + y;
+      const yRel = Math.min(Math.max(y / D, 0.01), 0.99);
+      const R = R_BASE * 0.99; // Folga interna
+      const L = L_BASE * 0.995;
+      const yNivel = -R + (2 * R * yRel);
 
-      // Forma 2D transversal: arco inferior + linha reta superior da lâmina de água
-      const theta = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - y / R)));
-      const startAngle = -Math.PI / 2 - theta / 2;
-      const endAngle = -Math.PI / 2 + theta / 2;
+      // Desenha o perfil fechado transversal da água: arco inferior + linha reta superior
+      const theta = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - 2 * yRel)));
+      const startAngle = (3 * Math.PI / 2) - (theta / 2);
+      const endAngle = (3 * Math.PI / 2) + (theta / 2);
 
       const shape = new THREE.Shape();
-      shape.absarc(0, 0, R, startAngle, endAngle, false);
-      shape.closePath(); // Fecha a linha reta horizontal exatamente no nível da água
+      const nPts = 36;
+      for (let i = 0; i <= nPts; i++) {
+        const a = startAngle + (theta * i / nPts);
+        const px = R * Math.cos(a);
+        const py = R * Math.sin(a);
+        if (i === 0) shape.moveTo(px, py);
+        else shape.lineTo(px, py);
+      }
+      shape.closePath(); // Fecha a reta horizontal no topo da água
 
+      // Extrusão uniforme ao longo do comprimento do conduto
       const extrudeSettings = {
         steps: 1,
         depth: L,
         bevelEnabled: false
       };
-
       const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      geo.center(); // Centraliza perfeitamente no ponto (0, 0, 0)
-      geo.rotateY(Math.PI / 2); // Alinha longitudinalmente com o eixo do tubo horizontal X
+      geo.center(); // Centraliza com o tubo
 
       const mat = new THREE.MeshStandardMaterial({
         color: 0x0284c7,
@@ -1073,12 +1110,7 @@
       });
 
       waterMesh = new THREE.Mesh(geo, mat);
-      scene.add(waterMesh);
-    }
-
-    function atualizarVisualizacao3D(D, y) {
-      const yRel = D > 0 ? y / D : 0;
-      criarAguaUnificada(yRel);
+      main3DGroup.add(waterMesh);
     }
 
     function animate3D() {
