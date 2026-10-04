@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SanearCheck Web — Auditoria Hidráulica & Simulação Numérica</title>
+  <style>
+    :root {
+      --bg: #0b1329;
+      --card-bg: #131f3d;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-size: 1.75rem;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--primary);
+      margin-top: 8px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .main-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #0b1329;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Validações Pré-Auditoria */
+    .validation-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .val-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .val-pass { color: var(--success); }
+    .val-warn { color: var(--warning); }
+    .val-fail { color: var(--danger); }
+
+    /* Telemetria / KPIs */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .kpi-card {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 4px 0;
+    }
+
+    .kpi-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Visualização 2D/3D da Seção */
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .verdict-box {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>SanearCheck Web</h1>
+      <p>Simulação Numérica e Validação Normativa de Condutos Livres (NBR 9649 / NBR 17163)</p>
+      <span class="badge">Métodos Numéricos — UVA | Prof. Me. Audelis de Oliveira</span>
+    </header>
+
+    <div class="main-grid">
+      <!-- Painel de Entrada de Parâmetros -->
+      <div class="card">
+        <h2>⚙️ Parâmetros do Trecho</h2>
+
+        <div class="form-group">
+          <label for="dn">Diâmetro Nominal (DN) [mm]</label>
+          <input type="number" id="dn" value="150" step="25" min="50">
+        </div>
+
+        <div class="form-group">
+          <label for="declividade">Declividade Real de Campo ($I_0$) [m/m]</label>
+          <input type="number" id="declividade" value="0.0055" step="0.0001" min="0.0001">
+        </div>
+
+        <div class="form-group">
+          <label for="vazao">Vazão de Projeto ($Q$) [L/s]</label>
+          <input type="number" id="vazao" value="2.5" step="0.1" min="0.01">
+        </div>
+
+        <div class="form-group">
+          <label for="manning">Coeficiente de Rugosidade ($n$)</label>
+          <input type="number" id="manning" value="0.013" step="0.001" min="0.009">
+        </div>
+
+        <div class="form-group">
+          <label for="metodo">Motor Numérico (Módulo 3)</label>
+          <select id="metodo">
+            <option value="newton" selected>Newton-Raphson com Derivada Numérica</option>
+            <option value="secante">Método da Secante</option>
+            <option value="bisseccao">Método da Bissecção (Intervalar)</option>
+          </select>
+        </div>
+
+        <button class="btn" onclick="executarAuditoria()">Calcular e Validar</button>
+      </div>
+
+      <!-- Painel de Resultados & Auditoria -->
+      <div class="card">
+        <h2>📊 Auditoria e Diagnóstico</h2>
+
+        <!-- Fase 1: Validação Preliminar de Projeto -->
+        <label>1. Validação Preliminar de Projeto (NBR 9649):</label>
+        <div class="validation-box" id="validacao-box">
+          <!-- Gerado dinamicamente -->
+        </div>
+
+        <!-- Fase 2: Telemetria Hidráulica -->
+        <label>2. Telemetria Hidráulica em Regime Livre:</label>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Lâmina d'Água (y)</div>
+            <div class="kpi-val" id="kpi-y">--</div>
+            <div class="kpi-sub" id="kpi-yd">y/D: --</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Velocidade Média (V)</div>
+            <div class="kpi-val" id="kpi-v">--</div>
+            <div class="kpi-sub">Norma: 0,60 a 5,00 m/s</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Tensão Trativa (τ)</div>
+            <div class="kpi-val" id="kpi-tau">--</div>
+            <div class="kpi-sub">Mínimo: 1,00 Pa</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Convergência Numérica</div>
+            <div class="kpi-val" id="kpi-it">--</div>
+            <div class="kpi-sub" id="kpi-res">Resíduo: --</div>
+          </div>
+        </div>
+
+        <!-- Laudo Normativo -->
+        <div class="verdict-box" id="verdict-box" style="display: none;"></div>
+
+        <!-- Seção Transversal Desenvolvida em Canvas -->
+        <div class="canvas-container">
+          <label style="margin-bottom: 8px;">Inspeção Geométrica da Seção Transversal:</label>
+          <canvas id="pipeCanvas" width="220" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- FUNÇÕES GEOMÉTRICAS DE SEÇÃO CIRCULAR ---
+    function calcGeometria(theta, D) {
+      const A = (Math.pow(D, 2) / 8) * (theta - Math.sin(theta));
+      const P = (D / 2) * theta;
+      const Rh = P > 0 ? A / P : 0;
+      const y = (D / 2) * (1 - Math.cos(theta / 2));
+      return { A, P, Rh, y };
+    }
+
+    // Função de resíduo de Manning: f(theta) = Q_calc(theta) - Q_proj = 0
+    function fResiduo(theta, D, I0, n, Q_proj) {
+      const { A, Rh } = calcGeometria(theta, D);
+      const Q_calc = (1.0 / n) * A * Math.pow(Rh, 2/3) * Math.sqrt(I0);
+      return Q_calc - Q_proj;
+    }
+
+    // --- MOTORES NUMÉRICOS (MÓDULO 3 DA APOSTILA) ---
+
+    // 1. Newton-Raphson com Derivada Numérica por Diferença Central (Seção 6.3 da apostila)
+    function newtonRaphsonManning(D, I0, n, Q_proj, tol = 1e-7, maxIt = 100) {
+      let theta = Math.PI; // Chute inicial: meia seção cheia (pi radianos)
+      const h_step = 1e-5; // Passo ótimo de derivação numérica (Módulo 1)
+      let it = 0;
+
+      for (it = 1; it <= maxIt; it++) {
+        const f = fResiduo(theta, D, I0, n, Q_proj);
+        if (Math.abs(f) < tol) break;
+
+        // Derivada central: f'(theta) ≈ [f(theta + h) - f(theta - h)] / 2h
+        const df = (fResiduo(theta + h_step, D, I0, n, Q_proj) - fResiduo(theta - h_step, D, I0, n, Q_proj)) / (2 * h_step);
+        
+        if (Math.abs(df) < 1e-12) break; // Evita divisão por zero
+        
+        const delta = f / df;
+        theta = theta - delta;
+
+        // Limite físico de segurança: entre tubo quase vazio e cheio
+        if (theta <= 0.005) theta = 0.005;
+        if (theta >= 2 * Math.PI * 0.999) theta = 2 * Math.PI * 0.999;
+
+        if (Math.abs(delta) < tol) break;
+      }
+      return { theta, iteracoes: it, residuo: Math.abs(fResiduo(theta, D, I0, n, Q_proj)) };
+    }
+
+    // 2. Método da Secante (Seção 4.4 da apostila)
+    function secanteManning(D, I0, n, Q_proj, tol = 1e-7, maxIt = 100) {
+      let x0 = Math.PI * 0.8;
+      let x1 = Math.PI * 1.2;
+      let it = 0;
+
+      for (it = 1; it <= maxIt; it++) {
+        const f0 = fResiduo(x0, D, I0, n, Q_proj);
+        const f1 = fResiduo(x1, D, I0, n, Q_proj);
+
+        if (Math.abs(f1) < tol || Math.abs(f1 - f0) < 1e-12) break;
+
+        const x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
+        x0 = x1;
+        x1 = x2;
+
+        if (x1 <= 0.005) x1 = 0.005;
+        if (x1 >= 2 * Math.PI * 0.999) x1 = 2 * Math.PI * 0.999;
+      }
+      return { theta: x1, iteracoes: it, residuo: Math.abs(fResiduo(x1, D, I0, n, Q_proj)) };
+    }
+
+    // 3. Método da Bissecção (Seção 3.1 da apostila)
+    function bisseccaoManning(D, I0, n, Q_proj, tol = 1e-7, maxIt = 100) {
+      let a = 0.005;
+      let b = 2 * Math.PI * 0.999;
+      let m = 0;
+      let it = 0;
+
+      for (it = 1; it <= maxIt; it++) {
+        m = 0.5 * (a + b);
+        const fm = fResiduo(m, D, I0, n, Q_proj);
+        
+        if (Math.abs(fm) < tol || 0.5 * (b - a) < tol) break;
+
+        const fa = fResiduo(a, D, I0, n, Q_proj);
+        if (fa * fm < 0) {
+          b = m;
+        } else {
+          a = m;
+        }
+      }
+      return { theta: m, iteracoes: it, residuo: Math.abs(fResiduo(m, D, I0, n, Q_proj)) };
+    }
+
+    // --- RENDERIZAÇÃO GRÁFICA DA SEÇÃO TRANSVERSAL ---
+    function desenharTubo(D, y) {
+      const canvas = document.getElementById('pipeCanvas');
+      const ctx = canvas.getContext('2d');
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const R_px = 85;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fundo do conduto
+      ctx.beginPath();
+      ctx.arc(cx, cy, R_px, 0, 2 * Math.PI);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+
+      // Nível d'água
+      const frac = Math.min(Math.max(y / D, 0), 1);
+      const h_water = 2 * R_px * frac;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R_px, 0, 2 * Math.PI);
+      ctx.clip(); // Recorta para ficar apenas dentro do tubo circular
+
+      // Desenha o bloco líquido azul
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+      ctx.fillRect(cx - R_px, cy + R_px - h_water, 2 * R_px, h_water);
+
+      // Linha da superfície livre da água
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - R_px, cy + R_px - h_water);
+      ctx.lineTo(cx + R_px, cy + R_px - h_water);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Linha tracejada de lâmina máxima permitida (75%)
+      const y_max_px = cy + R_px - (2 * R_px * 0.75);
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(cx - R_px + 8, y_max_px);
+      ctx.lineTo(cx + R_px - 8, y_max_px);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // --- FLUXO PRINCIPAL: EXECUÇÃO DA AUDITORIA ---
+    function executarAuditoria() {
+      // 1. Leitura dos dados de entrada
+      const DN_mm = parseFloat(document.getElementById('dn').value);
+      const D = DN_mm / 1000.0;
+      const I0 = parseFloat(document.getElementById('declividade').value);
+      const Q_lps = parseFloat(document.getElementById('vazao').value);
+      const Q = Q_lps / 1000.0;
+      const n = parseFloat(document.getElementById('manning').value);
+      const metodo = document.getElementById('metodo').value;
+
+      // 2. FASE 1: VALIDAÇÃO PRELIMINAR DE PROJETO (NBR 9649)
+      const valBox = document.getElementById('validacao-box');
+      valBox.innerHTML = '';
+      let projetoValido = true;
+
+      // a) Checagem de Diâmetro Mínimo (Mínimo de 100mm para ramal / 150mm para rede pública)
+      const passDN = DN_mm >= 100;
+      valBox.innerHTML += `
+        <div class="val-item ${passDN ? 'val-pass' : 'val-fail'}">
+          ${passDN ? '✔' : '✖'} <strong>Diâmetro Nominal de Projeto:</strong> ${DN_mm} mm 
+          ${passDN ? '(Conforme - DN ≥ 100 mm)' : '(Inconforme - abaixo do mínimo normativo)'}
+        </div>
+      `;
+      if (!passDN) projetoValido = false;
+
+      // b) Checagem de Declividade Mínima Admissível: I_min = 0.0055 * Q^(-0.47)
+      const I_min = 0.0055 * Math.pow(Q_lps, -0.47);
+      const passI0 = I0 >= I_min;
+      valBox.innerHTML += `
+        <div class="val-item ${passI0 ? 'val-pass' : 'val-warn'}">
+          ${passI0 ? '✔' : '⚠'} <strong>Declividade Mínima Normativa:</strong> ${I0.toFixed(5)} m/m 
+          (Exigido para ${Q_lps} L/s: ≥ ${I_min.toFixed(5)} m/m)
+        </div>
+      `;
+
+      // 3. FASE 2: MOTOR DE CÁLCULO NUMÉRICO
+      let resultado;
+      if (metodo === 'newton') {
+        resultado = newtonRaphsonManning(D, I0, n, Q);
+      } else if (metodo === 'secante') {
+        resultado = secanteManning(D, I0, n, Q);
+      } else {
+        resultado = bisseccaoManning(D, I0, n, Q);
+      }
+
+      const { theta, iteracoes, residuo } = resultado;
+      const { A, Rh, y } = calcGeometria(theta, D);
+      const yd = y / D;
+      const V = A > 0 ? Q / A : 0;
+      const tau = 9810 * Rh * I0; // Tensão trativa: tau = gamma * Rh * I0 (Pa)
+
+      // Atualização dos KPIs
+      document.getElementById('kpi-y').innerText = `${(y * 100).toFixed(2)} cm`;
+      document.getElementById('kpi-yd').innerText = `y/D: ${(yd * 100).toFixed(1)}% (Máx: 75%)`;
+      document.getElementById('kpi-v').innerText = `${V.toFixed(2)} m/s`;
+      document.getElementById('kpi-tau').innerText = `${tau.toFixed(2)} Pa`;
+      document.getElementById('kpi-it').innerText = `${iteracoes} iter.`;
+      document.getElementById('kpi-res').innerText = `Resíduo: ${residuo.toExponential(2)}`;
+
+      // 4. AVALIAÇÃO NORMATIVA DA AUDITORIA
+      const passLamina = yd <= 0.75;
+      const passAutolimpeza = tau >= 1.0;
+      const passVelocidade = V >= 0.60 && V <= 5.00;
+
+      const aprovado = passDN && passLamina && passAutolimpeza && passVelocidade;
+      const verdictBox = document.getElementById('verdict-box');
+      verdictBox.style.display = 'block';
+
+      if (aprovado) {
+        verdictBox.style.background = 'rgba(34, 197, 94, 0.15)';
+        verdictBox.style.border = '1px solid var(--success)';
+        verdictBox.style.color = 'var(--success)';
+        verdictBox.innerHTML = `✅ TRECHO APROVADO PELA ABNT NBR 9649/17163`;
+      } else {
+        verdictBox.style.background = 'rgba(239, 68, 68, 0.15)';
+        verdictBox.style.border = '1px solid var(--danger)';
+        verdictBox.style.color = 'var(--danger)';
+        let falhas = [];
+        if (!passLamina) falhas.push("Lâmina excessiva (y/D > 75%)");
+        if (!passAutolimpeza) falhas.push("Tensão trativa insuficiente (τ < 1,0 Pa — risco de assoreamento)");
+        if (!passVelocidade) falhas.push("Velocidade fora dos limites (0,60 a 5,00 m/s)");
+        verdictBox.innerHTML = `❌ TRECHO REPROVADO: ${falhas.join(' | ')}`;
+      }
+
+      // 5. Renderização gráfica da seção transversal
+      desenharTubo(D, y);
+    }
+
+    // Executa uma vez ao carregar a página
+    window.onload = executarAuditoria;
+  </script>
+</body>
+</html>
