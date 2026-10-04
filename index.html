@@ -49,7 +49,6 @@
       flex-direction: column;
     }
 
-    /* Cabeçalho */
     .app-header {
       background: #091226;
       border-bottom: 1px solid var(--card-border);
@@ -85,7 +84,6 @@
     .badge-pass { background: rgba(34, 197, 94, 0.15); color: var(--success); border: 1px solid var(--success); }
     .badge-fail { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
 
-    /* Layout em 2 Colunas */
     .app-layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -156,7 +154,6 @@
       border-color: var(--primary);
     }
 
-    /* Botões */
     .btn-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -187,7 +184,6 @@
     .btn-success { background: var(--success); color: #040914; font-weight: 700; width: 100%; padding: 9px; }
     .btn-success:hover { background: #16a34a; }
 
-    /* Caixas de Texto Pericial */
     .validation-status-box {
       border-radius: 6px;
       padding: 10px 12px;
@@ -209,7 +205,6 @@
       white-space: pre-wrap;
     }
 
-    /* KPIs */
     .metrics-bar {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -232,7 +227,6 @@
     .metric-val { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin: 2px 0; }
     .metric-desc { font-size: 0.62rem; color: var(--text-muted); }
 
-    /* Visualizador Isométrico 3D */
     .viewport-container {
       background: #040814;
       border: 1px solid var(--card-border);
@@ -259,6 +253,7 @@
       border-radius: 4px;
       pointer-events: none;
       line-height: 1.3;
+      z-index: 5;
     }
 
     .viewport-blocked-msg {
@@ -266,7 +261,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(239, 68, 68, 0.2);
+      background: rgba(239, 68, 68, 0.25);
       border: 1px solid var(--danger);
       color: #fca5a5;
       padding: 12px 18px;
@@ -275,6 +270,7 @@
       text-align: center;
       display: none;
       pointer-events: none;
+      z-index: 10;
     }
 
     .viewport-help {
@@ -284,9 +280,9 @@
       font-size: 0.65rem;
       color: #64748b;
       pointer-events: none;
+      z-index: 5;
     }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -307,7 +303,7 @@
       padding: 16px;
     }
 
-    /* Papel Timbrado PDF A4 */
+    /* Impressão em Papel Timbrado A4 */
     @media screen {
       #folha-timbrada { display: none; }
     }
@@ -437,13 +433,13 @@
           
           <div class="btn-row">
             <button class="btn-primary" onclick="document.getElementById('fileCsv').click()">📂 Importar CSV</button>
-            <button class="btn-dark" onclick="imprimirLaudoTimbrado()">🖨️ Exportar PDF</button>
+            <button class="btn-dark" onclick="imprimirLaudoTimbrado()">🖨️️ Exportar PDF</button>
           </div>
         </div>
 
         <button class="btn-success" onclick="abrirModalLote()">📊 AUDITAR LOTE COMPLETO (BACIA)</button>
 
-        <!-- Etapa 1 -->
+        <!-- Etapa 1: Validação de Projeto -->
         <div class="card">
           <div class="card-title">ETAPA 1: VALIDAÇÃO PRELIMINAR DE PROJETO</div>
           <div class="validation-status-box" id="validacaoProjetoBox">
@@ -451,7 +447,7 @@
           </div>
         </div>
 
-        <!-- Etapa 2 -->
+        <!-- Etapa 2: Parecer Técnico -->
         <div class="card" style="flex: 1;">
           <div class="card-title">ETAPA 2: PARECER PERICIAL DE AUDITORIA</div>
           <div class="parecer-tecnico-box" id="parecerTexto">Processando laudo...</div>
@@ -498,7 +494,7 @@
         <div class="viewport-container">
           <div class="viewport-legend">
             Conduto Isométrico 3D<br>
-            <span style="color: var(--primary);">■ Tubulação Translúcida</span> | 
+            <span style="color: var(--primary);">■ Tubo Translúcido</span> | 
             <span style="color: #38bdf8;">■ Lâmina Líquida</span> | 
             <span style="color: #ef4444;">-- Limite 75%</span>
           </div>
@@ -507,7 +503,7 @@
             ⛔ VISUALIZAÇÃO 3D BLOQUEADA<br>
             <span style="font-size: 0.72rem; color: #cbd5e1;">Trecho reprovado na Etapa 1 (Concepção de Projeto)</span>
           </div>
-          <div class="viewport-help">Rotação 360° | Zoom disponível</div>
+          <div class="viewport-help">Rotação 360° com arrasto | Zoom no ecrã</div>
         </div>
       </div>
     </div>
@@ -946,11 +942,11 @@
       document.getElementById("modalLote").style.display = "none";
     }
 
-    // --- VISUALIZADOR 3D REESTRUTURADO E FIEL (THREE.JS) ---
+    // --- VISUALIZADOR 3D ISOMÉTRICO ROBUSTO (THREE.JS) ---
     let scene, camera, renderer, controls;
-    let waterGroup, pipeGroup;
-    const R_BASE = 1.0;
-    const L_BASE = 4.2;
+    let waterMesh, lineMaxMesh;
+    const R_TUBO = 1.0;
+    const L_TUBO = 4.2;
 
     function init3D() {
       const container = document.getElementById("viewport3d");
@@ -960,9 +956,9 @@
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x040814);
 
-      // Câmara configurada em perspetiva isométrica diagonal estável
+      // Câmara configurada em perspetiva isométrica estável
       camera = new THREE.PerspectiveCamera(36, w / h, 0.1, 100);
-      camera.position.set(4.5, 3.2, 4.8);
+      camera.position.set(4.8, 3.2, 4.6);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(w, h);
@@ -974,11 +970,11 @@
       controls.dampingFactor = 0.05;
       controls.target.set(0, 0, 0);
 
-      // Trava para rotação orbital natural sem inversão do chão
-      controls.minPolarAngle = 0.2;
-      controls.maxPolarAngle = Math.PI / 2 + 0.15;
+      // Trava para rotação orbital natural
+      controls.minPolarAngle = 0.3;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1;
 
-      // Iluminação equilibrada
+      // Iluminação de estúdio
       const ambLight = new THREE.AmbientLight(0xffffff, 0.85);
       scene.add(ambLight);
 
@@ -987,142 +983,102 @@
       scene.add(dirLight);
 
       const dirLightBack = new THREE.DirectionalLight(0xffffff, 0.5);
-      dirLightBack.position.set(-6, -5, -6);
+      dirLightBack.position.set(-6, -4, -6);
       scene.add(dirLightBack);
 
-      // Monta o conduto translúcido fixo
-      pipeGroup = new THREE.Group();
-      scene.add(pipeGroup);
-
-      // Tubo deitado ao longo do eixo Z
-      const pipeGeo = new THREE.CylinderGeometry(R_BASE, R_BASE, L_BASE, 48, 1, true);
-      pipeGeo.rotateX(Math.PI / 2); // Deita o cilindro no eixo Z
+      // 1. Tubo Translúcido (Deitado no eixo X)
+      const pipeGeo = new THREE.CylinderGeometry(R_TUBO, R_TUBO, L_TUBO, 48, 1, true);
+      pipeGeo.rotateZ(Math.PI / 2); // Deita o cilindro no eixo horizontal X
 
       const pipeMat = new THREE.MeshPhysicalMaterial({
         color: 0x94a3b8,
         transparent: true,
-        opacity: 0.25,
-        roughness: 0.1,
+        opacity: 0.28,
+        roughness: 0.15,
         transmission: 0.7,
         side: THREE.DoubleSide
       });
       const pipeMesh = new THREE.Mesh(pipeGeo, pipeMat);
-      pipeGroup.add(pipeMesh);
+      scene.add(pipeMesh);
 
-      // Anéis de reforço nas extremidades
+      // Anéis metálicos nas extremidades
       const ringMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
-      const r1 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat);
-      r1.position.set(0, 0, -L_BASE / 2);
-      pipeGroup.add(r1);
+      const r1 = new THREE.Mesh(new THREE.TorusGeometry(R_TUBO, 0.035, 16, 64), ringMat);
+      r1.position.set(-L_TUBO / 2, 0, 0); r1.rotateY(Math.PI / 2);
+      scene.add(r1);
 
-      const r2 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat);
-      r2.position.set(0, 0, L_BASE / 2);
-      pipeGroup.add(r2);
+      const r2 = new THREE.Mesh(new THREE.TorusGeometry(R_TUBO, 0.035, 16, 64), ringMat);
+      r2.position.set(L_TUBO / 2, 0, 0); r2.rotateY(Math.PI / 2);
+      scene.add(r2);
 
-      // Linhas vermelhas longitudinais de limite 75%
-      const yLimit = -R_BASE + (2 * R_BASE * 0.75); // Altura a 75%
-      const xLimit = Math.sqrt(Math.max(0, R_BASE * R_BASE - yLimit * yLimit));
+      // Linhas vermelhas de limite 75%
+      const yLimit = -R_TUBO + (2 * R_TUBO * 0.75); // Cota Y a 75%
+      const zLimit = Math.sqrt(Math.max(0, R_TUBO * R_TUBO - yLimit * yLimit));
       
       const lineMat = new THREE.LineDashedMaterial({ color: 0xef4444, dashSize: 0.15, gapSize: 0.1 });
       
-      const p1 = [new THREE.Vector3(xLimit, yLimit, -L_BASE/2), new THREE.Vector3(xLimit, yLimit, L_BASE/2)];
+      const p1 = [new THREE.Vector3(-L_TUBO/2, yLimit, zLimit), new THREE.Vector3(L_TUBO/2, yLimit, zLimit)];
       const lineMesh1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p1), lineMat);
       lineMesh1.computeLineDistances();
-      pipeGroup.add(lineMesh1);
+      scene.add(lineMesh1);
 
-      const p2 = [new THREE.Vector3(-xLimit, yLimit, -L_BASE/2), new THREE.Vector3(-xLimit, yLimit, L_BASE/2)];
+      const p2 = [new THREE.Vector3(-L_TUBO/2, yLimit, -zLimit), new THREE.Vector3(L_TUBO/2, yLimit, -zLimit)];
       const lineMesh2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p2), lineMat);
       lineMesh2.computeLineDistances();
-      pipeGroup.add(lineMesh2);
+      scene.add(lineMesh2);
 
-      // Grupo para a água dinâmica
-      waterGroup = new THREE.Group();
-      scene.add(waterGroup);
-
-      atualizarVisualizacao3D(0.15, 0.048);
+      criarAguaUnificada(0.32);
       animate3D();
     }
 
-    // Geração rigorosa da calota líquida dentro do tubo cilíndrico
-    function atualizarVisualizacao3D(D, y) {
-      if (!waterGroup) return;
-
-      // Limpa a água anterior
-      while (waterGroup.children.length > 0) {
-        const obj = waterGroup.children.pop();
-        if (obj.geometry) obj.geometry.dispose();
+    // Geometria Volumétrica Unificada da Água
+    function criarAguaUnificada(yRel) {
+      if (waterMesh) {
+        scene.remove(waterMesh);
+        if (waterMesh.geometry) waterMesh.geometry.dispose();
       }
 
-      if (y <= 0.001 || D <= 0) return; // Trecho seco ou bloqueado
+      if (yRel <= 0.01) return; // Tubo seco/bloqueado
 
-      const yRel = Math.min(Math.max(y / D, 0.01), 0.99);
-      const R = R_BASE * 0.985; // Leve folga radial interna para evitar sobreposição de malhas
-      const L = L_BASE * 0.99;
-      const yAgua = -R + (2 * R * yRel); // Cota Y da lâmina livre da água
+      const R = R_TUBO * 0.99; // Folga interna para não sobrepor a casca do tubo
+      const L = L_TUBO * 0.995;
+      const y = Math.min(Math.max(yRel, 0.02), 0.98) * (2 * R);
+      const yNivel = -R + y;
 
-      // 1. GERAÇÃO DO FUNDO CURVO DA ÁGUA (Calota cilíndrica)
-      const theta = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - 2 * yRel))); // Ângulo central molhado
-      const startAngle = (3 * Math.PI / 2) - (theta / 2); // Centralizado na geratriz inferior (3pi/2)
+      // Forma 2D transversal: arco inferior + linha reta superior da lâmina de água
+      const theta = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - y / R)));
+      const startAngle = -Math.PI / 2 - theta / 2;
+      const endAngle = -Math.PI / 2 + theta / 2;
 
-      // Cilindro aberto contendo apenas o arco molhado
-      const waterCurvedGeo = new THREE.CylinderGeometry(R, R, L, 36, 1, true, startAngle, theta);
-      waterCurvedGeo.rotateX(Math.PI / 2); // Deita no eixo Z
+      const shape = new THREE.Shape();
+      shape.absarc(0, 0, R, startAngle, endAngle, false);
+      shape.closePath(); // Fecha a linha reta horizontal exatamente no nível da água
 
-      const waterBodyMat = new THREE.MeshStandardMaterial({
+      const extrudeSettings = {
+        steps: 1,
+        depth: L,
+        bevelEnabled: false
+      };
+
+      const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      geo.center(); // Centraliza perfeitamente no ponto (0, 0, 0)
+      geo.rotateY(Math.PI / 2); // Alinha longitudinalmente com o eixo do tubo horizontal X
+
+      const mat = new THREE.MeshStandardMaterial({
         color: 0x0284c7,
-        roughness: 0.15,
+        roughness: 0.1,
         metalness: 0.05,
         transparent: true,
-        opacity: 0.85,
-        side: THREE.DoubleSide
-      });
-      const waterCurvedMesh = new THREE.Mesh(waterCurvedGeo, waterBodyMat);
-      waterGroup.add(waterCurvedMesh);
-
-      // 2. GERAÇÃO DA SUPERFÍCIE LIVRE DA ÁGUA (Plano horizontal brilhante)
-      const bSuperficie = 2 * R * Math.sin(theta / 2); // Largura do espelho de água
-      const waterSurfaceGeo = new THREE.PlaneGeometry(bSuperficie, L);
-      waterSurfaceGeo.rotateX(-Math.PI / 2); // Fica horizontal
-
-      const waterSurfaceMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        roughness: 0.05,
-        metalness: 0.1,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide
-      });
-      const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeo, waterSurfaceMat);
-      waterSurfaceMesh.position.set(0, yAgua, 0);
-      waterGroup.add(waterSurfaceMesh);
-
-      // 3. TAMPÕES FRONTAIS DA ÁGUA (Bocas de entrada e saída)
-      const shapeTampa = new THREE.Shape();
-      const numPts = 32;
-      for (let i = 0; i <= numPts; i++) {
-        const ang = startAngle + (theta * i / numPts);
-        const px = R * Math.cos(ang);
-        const py = R * Math.sin(ang);
-        if (i === 0) shapeTampa.moveTo(px, py);
-        else shapeTampa.lineTo(px, py);
-      }
-      shapeTampa.closePath();
-
-      const tampaGeo = new THREE.ShapeGeometry(shapeTampa);
-      const tampaMat = new THREE.MeshStandardMaterial({
-        color: 0x0284c7,
-        transparent: true,
-        opacity: 0.85,
-        side: THREE.DoubleSide
+        opacity: 0.85
       });
 
-      const tampa1 = new THREE.Mesh(tampaGeo, tampaMat);
-      tampa1.position.set(0, 0, L / 2);
-      waterGroup.add(tampa1);
+      waterMesh = new THREE.Mesh(geo, mat);
+      scene.add(waterMesh);
+    }
 
-      const tampa2 = new THREE.Mesh(tampaGeo, tampaMat);
-      tampa2.position.set(0, 0, -L / 2);
-      waterGroup.add(tampa2);
+    function atualizarVisualizacao3D(D, y) {
+      const yRel = D > 0 ? y / D : 0;
+      criarAguaUnificada(yRel);
     }
 
     function animate3D() {
