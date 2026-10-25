@@ -92,14 +92,13 @@ h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1.2px;line-height:1.12;margin:
 .modal-box .report{margin:15px 0}
 footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;color:#6f849d;font-size:11px}
 
-/* Estilo exclusivo e limpo para folha timbrada impressa sem páginas em branco */
+/* Estilo exclusivo para folha timbrada impressa sem páginas em branco */
 #folha-timbrada { display: none; }
 
 @media print {
   @page { size: A4 portrait; margin: 10mm; }
-  body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
-  .app { display: none !important; }
-  .modal-backdrop { display: none !important; }
+  html, body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
+  .app, .modal-backdrop, .modal-box { display: none !important; }
   
   #folha-timbrada {
     display: block !important;
@@ -374,7 +373,7 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
     </div>
     <div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9; max-height: 340px; overflow-y: auto;"></div>
     <div class="actions">
-      <button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</div>
+      <button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</button>
       <button class="btn btn-primary btn-block" onclick="imprimirLaudoGeralLote()">Imprimir / salvar PDF</button>
     </div>
   </div>
@@ -667,10 +666,10 @@ function abrirModalLote(){
       <span style="color:var(--red)">● Reprovados Projeto: ${p}</span> | 
       <span style="color:var(--amber)">● Reprovados Obra: ${o}</span>
     </div>
-    <div style="border: 1px solid #17436a; border-radius: 8px; overflow-hidden;">
+    <div style="max-height: 260px; overflow-y: auto; border: 1px solid #17436a; border-radius: 8px;">
       <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
         <thead>
-          <tr style="background: #071a31;">
+          <tr style="background: #071a31; position: sticky; top: 0;">
             <th style="padding: 6px; text-align: left; border-bottom: 1px solid #17436a;">Identificação</th>
             <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">DN</th>
             <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">Decliv.</th>
