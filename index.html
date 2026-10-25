@@ -88,12 +88,86 @@ h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1.2px;line-height:1.12;margin:
 .blocked span{display:block;font-weight:500;font-size:11px;margin-top:5px}
 .viewport-footer{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}
 .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,14,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
-.modal-box{width:min(560px,100%);background:#101b2d;border:1px solid #30435b;border-radius:18px;padding:22px;box-shadow:0 25px 90px #0009}
+.modal-box{width:min(680px,100%);background:#101b2d;border:1px solid #30435b;border-radius:18px;padding:22px;box-shadow:0 25px 90px #0009}
 .modal-box .report{margin:15px 0}
 footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;color:#6f849d;font-size:11px}
+
+/* Estilo exclusivo e limpo para folha timbrada impressa sem páginas em branco */
+#folha-timbrada { display: none; }
+
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
+  .app { display: none !important; }
+  .modal-backdrop { display: none !important; }
+  
+  #folha-timbrada {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    font-family: Arial, sans-serif;
+    color: #0f172a;
+    background: #fff;
+  }
+  .timbrado-header {
+    border-bottom: 2px solid #0284c7;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .timbrado-title h1 { font-size: 12pt; color: #0284c7; margin-bottom: 2px; }
+  .timbrado-title p { font-size: 7.5pt; color: #475569; margin: 0; }
+  .timbrado-box {
+    page-break-inside: avoid;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    font-size: 8pt;
+  }
+  .timbrado-box h3 {
+    font-size: 8.5pt;
+    color: #0284c7;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+  }
+  .timbrado-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+  .timbrado-table tr { page-break-inside: avoid; page-break-after: auto; }
+  .timbrado-table th, .timbrado-table td {
+    border: 1px solid #cbd5e1;
+    padding: 3px 5px;
+    text-align: left;
+    font-size: 7pt;
+  }
+  .timbrado-table th { background: #f8fafc; font-weight: bold; }
+  .timbrado-status {
+    page-break-inside: avoid;
+    padding: 5px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 8.5pt;
+    border-radius: 4px;
+    margin: 8px 0;
+  }
+  .timbrado-aprovado { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .timbrado-reprovado { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .timbrado-footer {
+    page-break-inside: avoid;
+    margin-top: 10px;
+    border-top: 1px solid #cbd5e1;
+    padding-top: 4px;
+    font-size: 7pt;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
 @media(max-width:1050px){.layout{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.viewport{height:370px}}
 @media(max-width:760px){.app{padding:12px}.topbar{padding:13px;border-radius:15px}.brand-mark{width:40px;height:40px}.brand-name{font-size:16px}.brand-sub{font-size:9px;letter-spacing:1px}.version{display:none}.page-intro{display:block;margin:23px 2px 16px}.page-intro .tag{display:inline-block;margin-top:12px}.layout{grid-template-columns:1fr}.stack{gap:13px}.panel{padding:15px}.metrics{gap:8px}.metric{padding:12px}.metric-value{font-size:23px}.viewport{height:330px}.viewport-head{padding:14px}.field{grid-template-columns:minmax(0,1fr) minmax(115px,42%)}footer{flex-direction:column}.select-panel{align-items:flex-start;flex-direction:column}.select-panel select{width:100%}}
-@media(max-width:390px){.header-right .status{font-size:9px;padding:6px 8px}.brand{gap:9px}.brand-sub{letter-spacing:.4px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.field{gap:7px}.field label{font-size:11px}.actions .btn{font-size:11px;padding:10px 9px}.legend{font-size:10px;top:8px;left:8px}}
 </style>
 </head>
 <body>
@@ -298,9 +372,9 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
       </div>
       <span class="step">LOTE</span>
     </div>
-    <div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9"></div>
+    <div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9; max-height: 340px; overflow-y: auto;"></div>
     <div class="actions">
-      <button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</button>
+      <button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</div>
       <button class="btn btn-primary btn-block" onclick="imprimirLaudoGeralLote()">Imprimir / salvar PDF</button>
     </div>
   </div>
@@ -338,6 +412,7 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
     <div>Normas de referência: ABNT NBR 9649 / NBR 17163</div>
   </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -566,20 +641,48 @@ function importarCsv(event){
 
 function abrirModalLote(){
   let a=0,p=0,o=0;
+  let htmlTabelaModal = "";
 
   listaTrechos.forEach(t=>{
     const r=auditarTrechoCompleto(t);
-    if(r.bloqueado)p++;
-    else if(r.obraAprovada)a++;
-    else o++;
+    let st = "", cl = "";
+    if(r.bloqueado){ p++; st="Reprovado (Proj)"; cl="#fb7185"; }
+    else if(r.obraAprovada){ a++; st="Conforme"; cl="#27e36b"; }
+    else { o++; st="Reprovado (Obra)"; cl="#fbbf24"; }
+
+    htmlTabelaModal += `
+      <tr>
+        <td style="padding: 6px; border-bottom: 1px solid #17436a;">${escaparHtml(t.id)}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center;">${t.dn}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center;">${t.decliv.toFixed(4)}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center; color: ${cl}; font-weight: bold;">${st}</td>
+      </tr>
+    `;
   });
 
-  document.getElementById("modalLoteConteudo").innerHTML=
-    `<strong>Total de trechos:</strong> ${listaTrechos.length}<br>
-    <span style="color:var(--green)">● Conformes: ${a}</span><br>
-    <span style="color:var(--red)">● Reprovados em projeto (etapa 1): ${p}</span><br>
-    <span style="color:var(--amber)">● Reprovados em execução (etapa 2): ${o}</span><br><br>
-    O relatório consolidado reúne os parâmetros e pareceres de todos os trechos carregados.`;
+  document.getElementById("modalLoteConteudo").innerHTML=`
+    <div style="margin-bottom: 12px;">
+      <strong>Total de trechos:</strong> ${listaTrechos.length}<br>
+      <span style="color:var(--green)">● Conformes: ${a}</span> | 
+      <span style="color:var(--red)">● Reprovados Projeto: ${p}</span> | 
+      <span style="color:var(--amber)">● Reprovados Obra: ${o}</span>
+    </div>
+    <div style="border: 1px solid #17436a; border-radius: 8px; overflow-hidden;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <thead>
+          <tr style="background: #071a31;">
+            <th style="padding: 6px; text-align: left; border-bottom: 1px solid #17436a;">Identificação</th>
+            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">DN</th>
+            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">Decliv.</th>
+            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">Parecer</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${htmlTabelaModal}
+        </tbody>
+      </table>
+    </div>
+  `;
 
   document.getElementById("modalLote").style.display="flex";
 }
