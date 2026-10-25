@@ -1,1022 +1,689 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SanearCheck 3D | Auditoria e Fiscalização Hidráulica</title>
-  <!-- Three.js + OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  
-  <style>
-    :root {
-      --bg: #030712;
-      --card-bg: #0b0f19;
-      --card-border: #1e293b;
-      --primary: #38bdf8;
-      --primary-hover: #0ea5e9;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 10px;
-      min-height: 100vh;
-    }
-
-    .app-window {
-      width: 100%;
-      max-width: 1360px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .app-header {
-      background: #070a14;
-      border-bottom: 1px solid var(--card-border);
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .app-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      letter-spacing: -0.025em;
-    }
-
-    .app-title span {
-      font-size: 0.75rem;
-      font-weight: 400;
-      color: var(--text-muted);
-    }
-
-    .badge-status {
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-    }
-    .badge-pass { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-fail { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-
-    .app-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      padding: 14px;
-    }
-
-    @media (min-width: 860px) {
-      body { padding: 16px; }
-      .app-layout {
-        grid-template-columns: 440px 1fr;
-        gap: 16px;
-        padding: 16px;
-      }
-    }
-
-    .col {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .card {
-      background: #070a14;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 14px;
-    }
-
-    .card-title {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      letter-spacing: 0.05em;
-    }
-
-    .form-group {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .form-group label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .form-group input, .form-group select {
-      width: 145px;
-      padding: 6px 10px;
-      background: #030712;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.82rem;
-      text-align: right;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus, .form-group select:focus {
-      border-color: var(--primary);
-    }
-
-    .btn-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    button, .btn-label {
-      padding: 8px 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s;
-      text-decoration: none;
-      user-select: none;
-    }
-
-    .btn-primary { background: #0284c7; color: #fff; }
-    .btn-primary:hover { background: #0369a1; }
-
-    .btn-dark { background: #1e293b; color: var(--text); border: 1px solid #334155; }
-    .btn-dark:hover { background: #334155; }
-
-    .btn-success { background: #059669; color: #fff; font-weight: 700; width: 100%; padding: 10px; }
-    .btn-success:hover { background: #047857; }
-
-    .validation-status-box {
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-size: 0.78rem;
-      line-height: 1.45;
-    }
-
-    .parecer-tecnico-box {
-      background: #030712;
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      padding: 10px;
-      font-family: "Courier New", Courier, monospace;
-      font-size: 0.74rem;
-      color: #cbd5e1;
-      height: 200px;
-      overflow-y: auto;
-      line-height: 1.45;
-      white-space: pre-wrap;
-    }
-
-    .metrics-bar {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    @media (min-width: 600px) {
-      .metrics-bar { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .metric-card {
-      background: #070a14;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 10px 6px;
-      text-align: center;
-    }
-
-    .metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
-    .metric-val { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin: 3px 0; }
-    .metric-desc { font-size: 0.62rem; color: var(--text-muted); }
-
-    .viewport-container {
-      background: #030712;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      height: 350px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    @media (min-width: 900px) {
-      .viewport-container { height: 400px; }
-    }
-
-    #viewport3d { width: 100%; height: 100%; display: block; }
-
-    .viewport-legend {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 0.68rem;
-      color: #94a3b8;
-      background: rgba(7, 10, 20, 0.85);
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #1e293b;
-      pointer-events: none;
-      line-height: 1.35;
-      z-index: 5;
-    }
-
-    .viewport-blocked-msg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(239, 68, 68, 0.2);
-      border: 1px solid var(--danger);
-      color: #fca5a5;
-      padding: 12px 18px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      text-align: center;
-      display: none;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    .viewport-help {
-      position: absolute;
-      bottom: 8px;
-      right: 10px;
-      font-size: 0.65rem;
-      color: #64748b;
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      padding: 16px;
-    }
-
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      max-width: 500px;
-      width: 100%;
-      padding: 18px;
-    }
-
-    /* Impressão em Papel Timbrado A4 (Lote Geral) */
-    @media screen {
-      #folha-timbrada { display: none; }
-    }
-
-    @media print {
-      @page { size: A4 portrait; margin: 12mm; }
-      body * { visibility: hidden; }
-      body { background: #fff !important; color: #000 !important; padding: 0 !important; }
-      #folha-timbrada, #folha-timbrada * { visibility: visible; }
-      #folha-timbrada {
-        display: block !important;
-        position: absolute;
-        left: 0; top: 0; width: 100%;
-        font-family: Arial, sans-serif;
-        color: #0f172a;
-        background: #fff;
-      }
-      .timbrado-header {
-        border-bottom: 2px solid #0284c7;
-        padding-bottom: 8px;
-        margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .timbrado-title h1 { font-size: 13pt; color: #0284c7; margin-bottom: 2px; }
-      .timbrado-title p { font-size: 8pt; color: #475569; margin: 0; }
-      .timbrado-box {
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        padding: 8px 10px;
-        margin-bottom: 10px;
-        font-size: 8.5pt;
-      }
-      .timbrado-box h3 {
-        font-size: 9pt;
-        color: #0284c7;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 3px;
-        margin-bottom: 6px;
-      }
-      .timbrado-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-      .timbrado-table th, .timbrado-table td {
-        border: 1px solid #cbd5e1;
-        padding: 4px 6px;
-        text-align: left;
-        font-size: 7.5pt;
-      }
-      .timbrado-table th { background: #f8fafc; font-weight: bold; }
-      .timbrado-status {
-        padding: 6px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 9.5pt;
-        border-radius: 4px;
-        margin: 10px 0;
-      }
-      .timbrado-aprovado { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-      .timbrado-reprovado { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-      .timbrado-footer {
-        margin-top: 15px;
-        border-top: 1px solid #cbd5e1;
-        padding-top: 6px;
-        font-size: 7.5pt;
-        color: #64748b;
-        display: flex;
-        justify-content: space-between;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SanearCheck 3D | Auditoria Hidráulica</title>
+<style>
+:root{
+  --bg:#080e19;--surface:#0e1727;--surface-2:#121f32;--surface-3:#17263b;
+  --border:#25364d;--text:#edf5ff;--muted:#91a4bc;--cyan:#38bdf8;
+  --cyan-strong:#0ea5e9;--green:#34d399;--red:#fb7185;--amber:#fbbf24;
+  --radius:16px;--shadow:0 18px 50px rgba(0,0,0,.22)
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 75% -20%,rgba(14,165,233,.13),transparent 42%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:1500px;margin:auto;padding:22px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 20px;background:rgba(14,23,39,.92);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.brand-mark{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#123b5a,#0b243a);border:1px solid #236084;color:var(--cyan)}
+.brand-mark svg{width:29px;height:29px}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:-.7px;line-height:1.15}
+.brand-name span{color:var(--cyan)}
+.brand-sub{color:var(--muted);font-size:11px;letter-spacing:1.4px;margin-top:5px}
+.header-right{display:flex;align-items:center;gap:12px}
+.version{color:var(--muted);font-size:12px}
+.status{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.5px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--green)}
+.status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
+.page-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:28px 2px 18px}
+.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}
+h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1.2px;line-height:1.12;margin:7px 0}
+.page-intro p{margin:0;color:var(--muted);max-width:650px}
+.tag{border:1px solid var(--border);border-radius:9px;padding:8px 11px;color:#b9c9dc;font-size:12px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(310px,390px) minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:grid;gap:16px;min-width:0}
+.panel{background:linear-gradient(180deg,rgba(18,31,50,.96),rgba(14,23,39,.98));border:1px solid var(--border);border-radius:var(--radius);padding:19px;box-shadow:var(--shadow);min-width:0}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.panel-title{font-size:14px;font-weight:750;letter-spacing:-.2px;margin:0}
+.panel-subtitle{font-size:12px;color:var(--muted);margin-top:4px}
+.step{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--cyan);background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.18);border-radius:7px;padding:5px 7px;white-space:nowrap}
+.form-section{font-size:10px;text-transform:uppercase;letter-spacing:1.25px;font-weight:800;color:#8ea6c1;margin:18px 0 10px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) minmax(112px,145px);align-items:center;gap:12px;margin:11px 0}
+.field label{font-size:12px;color:#c0cfe0}
+.field input,.field select{width:100%;min-width:0;background:#091321;color:var(--text);border:1px solid #2a3b52;border-radius:9px;padding:10px 11px;text-align:right;outline:none;transition:border-color .2s,box-shadow .2s}
+.field select{text-align:left}
+.field input:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(56,189,248,.1)}
+.actions{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 13px;border-radius:10px;border:1px solid transparent;font-weight:750;font-size:12px;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;box-shadow:0 7px 20px rgba(14,165,233,.16)}
+.btn-secondary{background:#18263a;border-color:#30435c;color:#dce8f5}
+.btn-success{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.28);color:var(--green)}
+.btn-block{width:100%}
+.file-input{display:none}
+.file-label{flex:1}
+.validation{display:flex;gap:11px;align-items:flex-start;padding:13px;border-radius:11px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#a7f3d0}
+.validation.fail{background:rgba(251,113,133,.08);border-color:rgba(251,113,133,.25);color:#fecdd3}
+.validation-icon{font-size:17px;line-height:1.2}
+.validation strong{display:block;font-size:12px;margin-bottom:3px}
+.validation p{margin:0;font-size:12px;color:inherit;opacity:.88}
+.report{white-space:pre-wrap;overflow-wrap:anywhere;background:#091321;border:1px solid #24354b;border-radius:11px;padding:15px;color:#c8d8ea;font:12px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:120px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.metric{background:linear-gradient(180deg,#121f32,#0e1727);border:1px solid var(--border);border-radius:14px;padding:16px;min-width:0}
+.metric-top{display:flex;align-items:center;justify-content:space-between;gap:7px;color:var(--muted);font-size:11px}
+.metric-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:rgba(56,189,248,.1);color:var(--cyan);font-size:15px}
+.metric-value{font-size:clamp(19px,2.2vw,27px);font-weight:800;letter-spacing:-.9px;margin:10px 0 2px;overflow-wrap:anywhere}
+.metric-note{font-size:11px;color:var(--muted)}
+.select-panel{display:flex;align-items:center;gap:14px}
+.select-panel label{font-weight:700;font-size:12px;white-space:nowrap}
+.select-panel select{flex:1;min-width:0;background:#091321;border:1px solid #2a3b52;border-radius:9px;color:var(--text);padding:10px}
+.viewport-panel{padding:0;overflow:hidden}
+.viewport-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 19px;border-bottom:1px solid var(--border)}
+.viewport-heading{font-weight:750}
+.viewport-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.live-label{font-size:10px;letter-spacing:1px;font-weight:800;color:var(--green)}
+.viewport{height:420px;position:relative;background:radial-gradient(ellipse at 50% 45%,#10263a 0%,#091321 58%,#080e19 100%);overflow:hidden}
+.viewport:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.045) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent);pointer-events:none}
+#viewport3d{position:absolute;inset:0;width:100%;height:100%;display:block}
+.legend{position:absolute;top:14px;left:14px;z-index:2;display:grid;gap:8px;padding:11px 12px;border:1px solid rgba(73,100,130,.55);border-radius:11px;background:rgba(8,14,25,.84);backdrop-filter:blur(10px);font-size:11px;color:#c2d1e2}
+.legend-item{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:3px;background:var(--cyan)}
+.dot.water{background:#0ea5e9}.dot.limit{background:var(--red)}
+.viewport-help{position:absolute;right:14px;bottom:12px;z-index:2;padding:6px 9px;border-radius:8px;background:rgba(8,14,25,.8);color:#9aadc4;font-size:10px}
+.blocked{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:90%;text-align:center;padding:15px 18px;border:1px solid rgba(251,113,133,.7);border-radius:12px;background:rgba(65,16,31,.9);color:#fecdd3;font-weight:800;font-size:12px;display:none}
+.blocked span{display:block;font-weight:500;font-size:11px;margin-top:5px}
+.viewport-footer{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,14,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+.modal-box{width:min(560px,100%);background:#101b2d;border:1px solid #30435b;border-radius:18px;padding:22px;box-shadow:0 25px 90px #0009}
+.modal-box .report{margin:15px 0}
+footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;color:#6f849d;font-size:11px}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.viewport{height:370px}}
+@media(max-width:760px){.app{padding:12px}.topbar{padding:13px;border-radius:15px}.brand-mark{width:40px;height:40px}.brand-name{font-size:16px}.brand-sub{font-size:9px;letter-spacing:1px}.version{display:none}.page-intro{display:block;margin:23px 2px 16px}.page-intro .tag{display:inline-block;margin-top:12px}.layout{grid-template-columns:1fr}.stack{gap:13px}.panel{padding:15px}.metrics{gap:8px}.metric{padding:12px}.metric-value{font-size:23px}.viewport{height:330px}.viewport-head{padding:14px}.field{grid-template-columns:minmax(0,1fr) minmax(115px,42%)}footer{flex-direction:column}.select-panel{align-items:flex-start;flex-direction:column}.select-panel select{width:100%}}
+@media(max-width:390px){.header-right .status{font-size:9px;padding:6px 8px}.brand{gap:9px}.brand-sub{letter-spacing:.4px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.field{gap:7px}.field label{font-size:11px}.actions .btn{font-size:11px;padding:10px 9px}.legend{font-size:10px;top:8px;left:8px}}
+/* Folha de impressão A4 */
+#folha-timbrada{display:none}
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ body{background:white!important;color:#111827!important;padding:0!important}
+ body *{visibility:hidden!important}
+ #folha-timbrada,#folha-timbrada *{visibility:visible!important}
+ #folha-timbrada{display:block!important;position:absolute;inset:0;width:100%;background:#fff;color:#111827;font:9pt Arial,sans-serif}
+ .timbrado-header{display:flex;justify-content:space-between;gap:15px;border-bottom:2px solid #0284c7;padding-bottom:9px;margin-bottom:12px}
+ .timbrado-title h1{font-size:13pt;color:#0284c7;margin:0 0 4px}.timbrado-title p{font-size:8pt;color:#475569;margin:2px 0}
+ .timbrado-box{border:1px solid #cbd5e1;border-radius:5px;padding:8px;margin-bottom:9px;font-size:8pt}
+ .timbrado-box h3{font-size:9pt;color:#0369a1;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:0 0 6px}
+ .timbrado-table{width:100%;border-collapse:collapse;margin:6px 0}.timbrado-table th,.timbrado-table td{border:1px solid #cbd5e1;padding:4px;font-size:7pt;text-align:left}
+ .timbrado-table th{background:#f1f5f9}.timbrado-status{padding:7px;text-align:center;font-weight:bold;border-radius:4px;margin:10px 0}
+ .timbrado-aprovado{background:#dcfce7;color:#166534;border:1px solid #86efac}.timbrado-reprovado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+ .timbrado-footer{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #cbd5e1;padding-top:7px;color:#64748b;font-size:7pt}
+}
+</style>
 </head>
 <body>
-
-  <div class="app-window">
-    <div class="app-header">
-      <div class="app-title">
-        SanearCheck 3D <span>| Auditoria Hidráulica & Fiscalização Construtiva (ABNT NBR 9649)</span>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M5 8h8a4 4 0 0 1 4 4v8a4 4 0 0 0 4 4h6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="m19 19 4 5-4 4" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="8" r="3" fill="#38bdf8"/><circle cx="25" cy="24" r="3" fill="#34d399"/></svg>
       </div>
-      <div>
-        <span class="badge-status badge-pass" id="statusGeralBadge">SISTEMA ATIVO</span>
-      </div>
+      <div><div class="brand-name">SanearCheck <span>3D</span></div><div class="brand-sub">INTELIGÊNCIA EM ENGENHARIA SANITÁRIA</div></div>
     </div>
-
-    <div class="app-layout">
-      <!-- Coluna Esquerda -->
-      <div class="col">
-        <div class="card">
-          <div class="card-title">
-            <span>DADOS DO TRECHO EXECUTADO</span>
-            <span style="font-size: 0.68rem; color: var(--text-muted);">TOPOGRAFIA & PROJETO</span>
-          </div>
-
-          <div class="form-group">
-            <label>Identificação:</label>
-            <input type="text" id="trechoId" value="Trecho 01" readonly style="color: var(--primary);">
-          </div>
-          <div class="form-group">
-            <label>Diâmetro Nominal (DN) [mm]:</label>
-            <input type="number" id="inputDn" value="150" step="25" onchange="atualizarTrechoManual()">
-          </div>
-          <div class="form-group">
-            <label>Declividade Real (I0) [m/m]:</label>
-            <input type="number" id="inputDecliv" value="0.0055" step="0.0001" onchange="atualizarTrechoManual()">
-          </div>
-          <div class="form-group">
-            <label>Cota Montante [m]:</label>
-            <input type="number" id="inputCotaMont" value="100.000" step="0.001" onchange="atualizarTrechoManual()">
-          </div>
-          <div class="form-group">
-            <label>Cota Jusante [m]:</label>
-            <input type="number" id="inputCotaJus" value="99.725" step="0.001" onchange="atualizarTrechoManual()">
-          </div>
-          <div class="form-group">
-            <label>Vazão de Projeto (Q) [L/s]:</label>
-            <input type="number" id="inputQ" value="2.50" step="0.1" onchange="atualizarTrechoManual()">
-          </div>
-          <div class="form-group">
-            <label>Motor Numérico:</label>
-            <select id="selectMetodo" onchange="atualizarTrechoManual()">
-              <option value="newton" selected>Newton-Raphson</option>
-              <option value="secante">Método da Secante</option>
-              <option value="bisseccao">Método da Bissecção</option>
-            </select>
-          </div>
-
-          <input type="file" id="fileCsv" accept=".csv, text/csv, text/plain" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;" onchange="importarCsv(event)">
-          
-          <div class="btn-row">
-            <label for="fileCsv" class="btn-primary btn-label">📂 Importar CSV</label>
-            <button class="btn-success" onclick="abrirModalLote()">📊 AUDITAR LOTE</button>
-          </div>
-        </div>
-
-        <!-- Etapa 1: Validação de Projeto -->
-        <div class="card">
-          <div class="card-title">ETAPA 1: VALIDAÇÃO PRELIMINAR DE PROJETO</div>
-          <div class="validation-status-box" id="validacaoProjetoBox">Carregando validação...</div>
-        </div>
-
-        <!-- Etapa 2: Parecer Técnico -->
-        <div class="card" style="flex: 1;">
-          <div class="card-title">ETAPA 2: PARECER PERICIAL DE AUDITORIA</div>
-          <div class="parecer-tecnico-box" id="parecerTexto">Processando laudo...</div>
-        </div>
-      </div>
-
-      <!-- Coluna Direita -->
-      <div class="col">
-        <!-- Navegação -->
-        <div class="card" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-          <div class="form-group" style="margin: 0; width: 100%;">
-            <label style="font-weight: 600; color: var(--text);">Inspecionar Trecho:</label>
-            <select id="selectTrecho" onchange="mudarTrechoSelecionado()" style="width: 240px; text-align: left;">
-              <option value="0">Trecho 01 (PV01 - PV02)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- KPIs -->
-        <div class="metrics-bar">
-          <div class="metric-card">
-            <div class="metric-label">Lâmina Líquida</div>
-            <div class="metric-val" id="kpiY">--</div>
-            <div class="metric-desc" id="kpiYRatio">y/D: --</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Velocidade Real</div>
-            <div class="metric-val" id="kpiV">--</div>
-            <div class="metric-desc">0,60 a 5,00 m/s</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Tensão Trativa</div>
-            <div class="metric-val" id="kpiTau">--</div>
-            <div class="metric-desc">Mínimo: 1,00 Pa</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Iterações</div>
-            <div class="metric-val" id="kpiIt">--</div>
-            <div class="metric-desc" id="kpiMetodoNome">Newton</div>
-          </div>
-        </div>
-
-        <!-- Visualizador 3D Isométrico Fiel -->
-        <div class="viewport-container">
-          <div class="viewport-legend">
-            Conduto Isométrico 3D<br>
-            <span style="color: var(--primary);">■ Tubulação Translúcida</span> | 
-            <span style="color: #38bdf8;">■ Lâmina Líquida</span> | 
-            <span style="color: #ef4444;">-- Limite 75%</span>
-          </div>
-          <div id="viewport3d"></div>
-          <div class="viewport-blocked-msg" id="msg3dBloqueado">
-            ⛔ CONDUTO EM SOBRECARGA / BLOQUEADO<br>
-            <span style="font-size: 0.72rem; color: #cbd5e1;" id="msg3dDetalhe">Inconformidade hidráulica ou geométrica</span>
-          </div>
-          <div class="viewport-help">Rotação 360° | Zoom disponível</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Auditoria em Lote -->
-  <div class="modal-backdrop" id="modalLote">
-    <div class="modal-box">
-      <div class="card-title" style="margin-bottom: 12px;">RELATÓRIO DE AUDITORIA EM LOTE (BACIA)</div>
-      <div id="modalLoteConteudo" style="font-size: 0.85rem; line-height: 1.5; color: #cbd5e1; margin-bottom: 16px;"></div>
-      <div class="btn-row">
-        <button class="btn-dark" onclick="fecharModalLote()">Fechar</button>
-        <button class="btn-primary" onclick="imprimirLaudoGeralLote()">🖨 Exportar Laudo Geral (PDF)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Folha Timbrada (Laudo Consolidado da Bacia Inteira) -->
-  <div id="folha-timbrada">
-    <div class="timbrado-header">
-      <div class="timbrado-title">
-        <h1>SanearCheck 3D — LAUDO TÉCNICO CONSOLIDADO DE BACIA</h1>
-        <p>Universidade Estadual Vale do Acaraú (UVA) — Engenharia Civil</p>
-        <p>Disciplina: Métodos Numéricos e Computacionais | Prof. Me. Audelis de Oliveira</p>
-      </div>
-      <div style="text-align: right; font-size: 8pt; color: #64748b;">
-        Emissão: <span id="tmbGeralData"></span><br>
-        Relatório Pericial Coletivo
-      </div>
-    </div>
-
-    <div class="timbrado-box">
-      <h3>1. SUMÁRIO EXECUTIVO DA BACIA</h3>
-      <table class="timbrado-table">
-        <tr>
-          <td><strong>Total de Trechos Analisados:</strong> <span id="tmbTotTrechos"></span></td>
-          <td><strong>Trechos Conformes (Aprovados):</strong> <span id="tmbTotConf" style="color: #166534; font-weight: bold;"></span></td>
-        </tr>
-        <tr>
-          <td><strong>Reprovados em Projeto (Etapa 1):</strong> <span id="tmbTotRepProj" style="color: #991b1b; font-weight: bold;"></span></td>
-          <td><strong>Reprovados em Execução (Etapa 2):</strong> <span id="tmbTotRepObra" style="color: #d97706; font-weight: bold;"></span></td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="timbrado-box">
-      <h3>2. TABELA MASTER DE AUDITORIA HIDRÁULICA (ABNT NBR 9649)</h3>
-      <table class="timbrado-table">
-        <thead>
-          <tr>
-            <th>Identificação</th>
-            <th>DN (mm)</th>
-            <th>I (m/m)</th>
-            <th>Q (L/s)</th>
-            <th>y/D (%)</th>
-            <th>Tau (Pa)</th>
-            <th>V (m/s)</th>
-            <th>Parecer</th>
-          </tr>
-        </thead>
-        <tbody id="tmbTabelaMaster"></tbody>
-      </table>
-    </div>
-
-    <div class="timbrado-status" id="tmbGeralStatusFinal"></div>
-
-    <div class="timbrado-footer">
-      <div>Responsável Técnico: Sâmia Oliveira e Equipe de Engenharia Civil (UVA)</div>
-      <div>Normas Regulamentadoras: ABNT NBR 9649 / NBR 17163</div>
-    </div>
-  </div>
-
-  <script>
-    let listaTrechos = [
-      { id: "Trecho 01 (PV01 - PV02)", dn: 150, decliv: 0.0055, cotaMont: 100.000, cotaJus: 99.725, q: 2.50, n: 0.013 },
-      { id: "Trecho 02 (PV02 - PV03)", dn: 150, decliv: 0.0040, cotaMont: 99.725, cotaJus: 99.525, q: 2.10, n: 0.013 },
-      { id: "Trecho 03 (PV03 - PV04)", dn: 100, decliv: 0.0020, cotaMont: 99.525, cotaJus: 99.425, q: 1.50, n: 0.013 }
-    ];
-    let trechoAtualIndex = 0;
-
-    function calcGeometria(theta, D) {
-      const A = (Math.pow(D, 2) / 8) * (theta - Math.sin(theta));
-      const P = (D / 2) * theta;
-      const Rh = P > 0 ? A / P : 0;
-      const y = (D / 2) * (1 - Math.cos(theta / 2));
-      return { A, P, Rh, y };
-    }
-
-    function fManning(theta, D, I0, n, Q) {
-      const { A, Rh } = calcGeometria(theta, D);
-      const Q_calc = (1.0 / n) * A * Math.pow(Rh, 2/3) * Math.sqrt(I0);
-      return Q_calc - Q;
-    }
-
-    function calcQCheio(D, I0, n) {
-      const A_cheio = (Math.PI * Math.pow(D, 2)) / 4;
-      const Rh_cheio = D / 4;
-      return (1.0 / n) * A_cheio * Math.pow(Rh_cheio, 2/3) * Math.sqrt(I0);
-    }
-
-    function resolverNewton(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
-      let theta = Math.PI;
-      const h = 1e-5;
-      let it = 0;
-      for (it = 1; it <= maxIt; it++) {
-        const f = fManning(theta, D, I0, n, Q);
-        if (Math.abs(f) < tol) break;
-        const df = (fManning(theta + h, D, I0, n, Q) - fManning(theta - h, D, I0, n, Q)) / (2 * h);
-        if (Math.abs(df) < 1e-12) break;
-        const delta = f / df;
-        theta -= delta;
-        if (theta <= 0.01) theta = 0.01;
-        if (theta >= 2 * Math.PI * 0.999) theta = 2 * Math.PI * 0.999;
-        if (Math.abs(delta) < tol) break;
-      }
-      return { theta, iteracoes: it, convergiu: it < maxIt };
-    }
-
-    function resolverSecante(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
-      let x0 = Math.PI * 0.8, x1 = Math.PI * 1.2, it = 0;
-      for (it = 1; it <= maxIt; it++) {
-        const f0 = fManning(x0, D, I0, n, Q);
-        const f1 = fManning(x1, D, I0, n, Q);
-        if (Math.abs(f1) < tol || Math.abs(f1 - f0) < 1e-12) break;
-        const x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
-        x0 = x1; x1 = x2;
-        if (x1 <= 0.01) x1 = 0.01;
-        if (x1 >= 2 * Math.PI * 0.999) x1 = 2 * Math.PI * 0.999;
-      }
-      return { theta: x1, iteracoes: it, convergiu: it < maxIt };
-    }
-
-    function resolverBisseccao(D, I0, n, Q, tol = 1e-7, maxIt = 50) {
-      let a = 0.01, b = 2 * Math.PI * 0.999, m = 0, it = 0;
-      for (it = 1; it <= maxIt; it++) {
-        m = 0.5 * (a + b);
-        const fm = fManning(m, D, I0, n, Q);
-        if (Math.abs(fm) < tol || 0.5 * (b - a) < tol) break;
-        if (fManning(a, D, I0, n, Q) * fm < 0) b = m;
-        else a = m;
-      }
-      return { theta: m, iteracoes: it, convergiu: it < maxIt };
-    }
-
-    function auditarTrechoCompleto(t) {
-      const D = t.dn / 1000.0;
-      const Q_m3s = t.q / 1000.0;
-      const metodo = document.getElementById("selectMetodo").value;
-
-      const passDN = t.dn >= 100;
-      const I_min = 0.0055 * Math.pow(t.q, -0.47);
-      const passDecliv = t.decliv >= I_min;
-      const passGravidade = t.cotaMont > t.cotaJus;
-
-      const projetoValido = passDN && passDecliv && passGravidade;
-
-      if (!projetoValido) {
-        return {
-          etapa1Valida: false,
-          passDN, passDecliv, passGravidade, I_min,
-          bloqueado: true,
-          motivoBloqueio: !passDN ? "Diâmetro < 100 mm" : !passGravidade ? "Inversão topográfica" : "Declividade < I_min"
-        };
-      }
-
-      const Q_cheio = calcQCheio(D, t.decliv, t.n);
-      if (Q_m3s >= Q_cheio * 1.05) {
-        return {
-          etapa1Valida: true,
-          passDN, passDecliv, passGravidade, I_min,
-          bloqueado: true,
-          afogado: true,
-          motivoBloqueio: "Conduto Afogado / Sob Pressão"
-        };
-      }
-
-      let sol;
-      if (metodo === "secante") sol = resolverSecante(D, t.decliv, t.n, Q_m3s);
-      else if (metodo === "bisseccao") sol = resolverBisseccao(D, t.decliv, t.n, Q_m3s);
-      else sol = resolverNewton(D, t.decliv, t.n, Q_m3s);
-
-      const { A, Rh, y } = calcGeometria(sol.theta, D);
-      const yd = y / D;
-      const V = A > 0 ? Q_m3s / A : 0;
-      const tau = 9810 * Rh * t.decliv;
-
-      const passYd = yd <= 0.75;
-      const passTau = tau >= 1.0;
-      const passV = V >= 0.60 && V <= 5.00;
-      const obraAprovada = passYd && passTau && passV;
-
-      return {
-        etapa1Valida: true,
-        bloqueado: false,
-        afogado: false,
-        passDN, passDecliv, passGravidade, I_min,
-        y, yd, V, tau, iteracoes: sol.iteracoes,
-        passYd, passTau, passV,
-        obraAprovada
-      };
-    }
-
-    function atualizarInterface() {
-      const t = listaTrechos[trechoAtualIndex];
-      const res = auditarTrechoCompleto(t);
-
-      document.getElementById("trechoId").value = t.id;
-      document.getElementById("inputDn").value = t.dn;
-      document.getElementById("inputDecliv").value = t.decliv;
-      document.getElementById("inputCotaMont").value = t.cotaMont.toFixed(3);
-      document.getElementById("inputCotaJus").value = t.cotaJus.toFixed(3);
-      document.getElementById("inputQ").value = t.q.toFixed(2);
-
-      const valBox = document.getElementById("validacaoProjetoBox");
-      const statusBadge = document.getElementById("statusGeralBadge");
-      const parecerBox = document.getElementById("parecerTexto");
-      const msg3d = document.getElementById("msg3dBloqueado");
-      const msg3dDetalhe = document.getElementById("msg3dDetalhe");
-
-      if (res.bloqueado) {
-        valBox.style.background = "rgba(239, 68, 68, 0.15)";
-        valBox.style.border = "1px solid var(--danger)";
-        valBox.style.color = "#fca5a5";
-        valBox.innerHTML = `<strong>❌ REPROVADO NO PROJETO:</strong> ${res.motivoBloqueio}`;
-        statusBadge.className = "badge-status badge-fail";
-        statusBadge.innerText = res.afogado ? "CONDUTO AFOGADO" : "REPROVADO";
-
-        document.getElementById("kpiY").innerText = "--";
-        document.getElementById("kpiYRatio").innerText = "Bloqueado";
-        document.getElementById("kpiV").innerText = "--";
-        document.getElementById("kpiTau").innerText = "--";
-        document.getElementById("kpiIt").innerText = "--";
-
-        parecerBox.innerText = `[AUDITORIA SUSPENSA]\nMotivo: ${res.motivoBloqueio}`;
-        msg3d.style.display = "block";
-        msg3dDetalhe.innerText = res.motivoBloqueio;
-        atualizarVisualizacao3D(t.dn / 1000.0, 0);
-        return;
-      }
-
-      msg3d.style.display = "none";
-      valBox.style.background = "rgba(16, 185, 129, 0.12)";
-      valBox.style.border = "1px solid var(--success)";
-      valBox.style.color = "#a7f3d0";
-      valBox.innerHTML = `<strong>✔ PROJETO CONFORME:</strong> DN ${t.dn} mm | I = ${t.decliv.toFixed(4)}`;
-
-      document.getElementById("kpiY").innerText = `${(res.y * 100).toFixed(2)} cm`;
-      document.getElementById("kpiYRatio").innerText = `y/D: ${(res.yd * 100).toFixed(1)}%`;
-      document.getElementById("kpiV").innerText = `${res.V.toFixed(2)} m/s`;
-      document.getElementById("kpiTau").innerText = `${res.tau.toFixed(2)} Pa`;
-      document.getElementById("kpiIt").innerText = `${res.iteracoes}`;
-      
-      const metodoNome = document.getElementById("selectMetodo").value;
-      document.getElementById("kpiMetodoNome").innerText = metodoNome === "newton" ? "Newton" : metodoNome === "secante" ? "Secante" : "Bissecção";
-
-      statusBadge.className = res.obraAprovada ? "badge-status badge-pass" : "badge-status badge-fail";
-      statusBadge.innerText = res.obraAprovada ? "TRECHO CONFORME" : "TRECHO REPROVADO";
-
-      let laudo = `LAUDO TÉCNICO DE AUDITORIA HIDRÁULICA\nIdentificação: ${t.id}\n`;
-      laudo += `--------------------------------------------------\n`;
-      laudo += `• Lâmina Líquida (y): ${(res.y * 100).toFixed(2)} cm (y/D = ${(res.yd * 100).toFixed(1)}%)\n`;
-      laudo += `• Tensão Trativa (Tau): ${res.tau.toFixed(2)} Pa [${res.passTau ? 'CONFORME' : 'REPROVADO'}]\n`;
-      laudo += `• Velocidade (V): ${res.V.toFixed(2)} m/s [${res.passV ? 'CONFORME' : 'REPROVADO'}]\n`;
-      laudo += `--------------------------------------------------\n`;
-      laudo += `PARECER: ${res.obraAprovada ? 'HOMOLOGADO' : 'REPROVADO'}`;
-
-      parecerBox.innerText = laudo;
-      atualizarVisualizacao3D(t.dn / 1000.0, res.y);
-    }
-
-    function atualizarTrechoManual() {
-      const t = listaTrechos[trechoAtualIndex];
-      t.dn = parseFloat(document.getElementById("inputDn").value);
-      t.decliv = parseFloat(document.getElementById("inputDecliv").value);
-      t.cotaMont = parseFloat(document.getElementById("inputCotaMont").value);
-      t.cotaJus = parseFloat(document.getElementById("inputCotaJus").value);
-      t.q = parseFloat(document.getElementById("inputQ").value);
-      atualizarInterface();
-    }
-
-    function mudarTrechoSelecionado() {
-      trechoAtualIndex = parseInt(document.getElementById("selectTrecho").value);
-      atualizarInterface();
-    }
-
-    function atualizarSelectTrechos() {
-      const sel = document.getElementById("selectTrecho");
-      sel.innerHTML = "";
-      listaTrechos.forEach((t, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.innerText = t.id;
-        sel.appendChild(opt);
-      });
-      sel.value = trechoAtualIndex;
-    }
-
-    // EXPORTAR LAUDO GERAL CONSOLIDADO DA BACIA EM LOTE (PDF / IMPRESSÃO)
-    function imprimirLaudoGeralLote() {
-      document.getElementById("tmbGeralData").innerText = new Date().toLocaleDateString("pt-BR");
-      
-      let aprovados = 0, reprovadosProj = 0, reprovadosObra = 0;
-      let htmlTabela = "";
-
-      listaTrechos.forEach((t) => {
-        const res = auditarTrechoCompleto(t);
-        let statusText = "";
-        let statusColor = "";
-
-        if (res.bloqueado) {
-          reprovadosProj++;
-          statusText = "Reprovado (Projeto)";
-          statusColor = "#991b1b";
-        } else if (res.obraAprovada) {
-          aprovados++;
-          statusText = "Conforme";
-          statusColor = "#166534";
-        } else {
-          reprovadosObra++;
-          statusText = "Reprovado (Obra)";
-          statusColor = "#d97706";
-        }
-
-        htmlTabela += `
-          <tr>
-            <td><strong>${t.id}</strong></td>
-            <td>${t.dn}</td>
-            <td>${t.decliv.toFixed(4)}</td>
-            <td>${t.q.toFixed(2)}</td>
-            <td>${res.bloqueado ? '--' : (res.yd * 100).toFixed(1) + '%'}</td>
-            <td>${res.bloqueado ? '--' : res.tau.toFixed(2)}</td>
-            <td>${res.bloqueado ? '--' : res.V.toFixed(2)}</td>
-            <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
-          </tr>
-        `;
-      });
-
-      document.getElementById("tmbTotTrechos").innerText = listaTrechos.length;
-      document.getElementById("tmbTotConf").innerText = aprovados;
-      document.getElementById("tmbTotRepProj").innerText = reprovadosProj;
-      document.getElementById("tmbTotRepObra").innerText = reprovadosObra;
-      document.getElementById("tmbTabelaMaster").innerHTML = htmlTabela;
-
-      const statusFinal = document.getElementById("tmbGeralStatusFinal");
-      if (reprovadosProj === 0 && reprovadosObra === 0) {
-        statusFinal.className = "timbrado-status timbrado-aprovado";
-        statusFinal.innerText = "PARECER GERAL DA BACIA: 100% HOMOLOGADO E CONFORME";
-      } else {
-        statusFinal.className = "timbrado-status timbrado-reprovado";
-        statusFinal.innerText = `PARECER GERAL DA BACIA: CONTÉM INCONFORMIDADES (${reprovadosProj + reprovadosObra} trechos pendentes)`;
-      }
-
-      fecharModalLote();
-      window.print();
-    }
-
-    function importarCsv(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const lines = e.target.result.split("\n");
-        let novos = [];
-        for (let i = 1; i < lines.length; i++) {
-          const l = lines[i].trim();
-          if (!l) continue;
-          const cols = l.split(",");
-          if (cols.length >= 6) {
-            novos.push({
-              id: cols[0].trim().replace(/^["']|["']$/g, ''),
-              dn: parseFloat(cols[1]),
-              decliv: parseFloat(cols[2]),
-              cotaMont: parseFloat(cols[3]),
-              cotaJus: parseFloat(cols[4]),
-              q: parseFloat(cols[5]),
-              n: 0.013
-            });
-          }
-        }
-        if (novos.length > 0) {
-          listaTrechos = novos;
-          trechoAtualIndex = 0;
-          atualizarSelectTrechos();
-          atualizarInterface();
-          abrirModalLote();
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function abrirModalLote() {
-      let aprovados = 0, reprovadosProj = 0, reprovadosObra = 0;
-      listaTrechos.forEach(t => {
-        const r = auditarTrechoCompleto(t);
-        if (r.bloqueado) reprovadosProj++;
-        else if (r.obraAprovada) aprovados++;
-        else reprovadosObra++;
-      });
-
-      document.getElementById("modalLoteConteudo").innerHTML = `
-        <strong>Total de Trechos na Bacia:</strong> ${listaTrechos.length}<br>
-        • Trechos Conformes: <span style="color: var(--success); font-weight: bold;">${aprovados}</span><br>
-        • Reprovados em Projeto (Etapa 1): <span style="color: var(--danger); font-weight: bold;">${reprovadosProj}</span><br>
-        • Reprovados em Execução (Etapa 2): <span style="color: var(--warning); font-weight: bold;">${reprovadosObra}</span><br><br>
-        Clique abaixo para gerar o Relatório Geral Consolidado de todos os trechos em formato PDF.
-      `;
-      document.getElementById("modalLote").style.display = "flex";
-    }
-
-    function fecharModalLote() {
-      document.getElementById("modalLote").style.display = "none";
-    }
-
-    let scene, camera, renderer, controls;
-    let mainGroup, waterMesh;
-    const R_BASE = 1.0;
-    const L_BASE = 4.2;
-
-    function init3D() {
-      const container = document.getElementById("viewport3d");
-      const w = container.clientWidth || 300;
-      const h = container.clientHeight || 300;
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x030712);
-
-      camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
-      camera.position.set(4.0, 2.5, 4.5);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      container.appendChild(renderer.domElement);
-
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.target.set(0, 0, 0);
-      controls.minDistance = 3.0;
-      controls.maxDistance = 8.0;
-
-      scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-      const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
-      dirLight.position.set(6, 8, 8);
-      scene.add(dirLight);
-
-      mainGroup = new THREE.Group();
-      scene.add(mainGroup);
-
-      const pipeGeo = new THREE.CylinderGeometry(R_BASE, R_BASE, L_BASE, 48, 1, true);
-      pipeGeo.rotateX(Math.PI / 2);
-      const pipeMat = new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.22, roughness: 0.15, transmission: 0.78, side: THREE.DoubleSide });
-      mainGroup.add(new THREE.Mesh(pipeGeo, pipeMat));
-
-      const ringMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
-      const r1 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat); r1.position.set(0, 0, -L_BASE / 2); mainGroup.add(r1);
-      const r2 = new THREE.Mesh(new THREE.TorusGeometry(R_BASE, 0.035, 16, 64), ringMat); r2.position.set(0, 0, L_BASE / 2); mainGroup.add(r2);
-
-      const yLim = -R_BASE + (2 * R_BASE * 0.75);
-      const xLim = Math.sqrt(Math.max(0, R_BASE * R_BASE - yLim * yLim));
-      const lineMat = new THREE.LineDashedMaterial({ color: 0xef4444, dashSize: 0.15, gapSize: 0.1 });
-      
-      const p1 = [new THREE.Vector3(xLim, yLim, -L_BASE/2), new THREE.Vector3(xLim, yLim, L_BASE/2)];
-      const line1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p1), lineMat); line1.computeLineDistances(); mainGroup.add(line1);
-
-      const p2 = [new THREE.Vector3(-xLim, yLim, -L_BASE/2), new THREE.Vector3(-xLim, yLim, L_BASE/2)];
-      const line2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p2), lineMat); line2.computeLineDistances(); mainGroup.add(line2);
-
-      atualizarVisualizacao3D(0.15, 0.048);
-      animate3D();
-    }
-
-    function atualizarVisualizacao3D(D, y) {
-      if (!mainGroup) return;
-      if (waterMesh) { mainGroup.remove(waterMesh); waterMesh.geometry.dispose(); waterMesh = null; }
-      if (y <= 0.001 || D <= 0) return;
-
-      const yRel = Math.min(Math.max(y / D, 0.01), 0.99);
-      const R = R_BASE * 0.996, L = L_BASE * 0.998;
-      const theta = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - 2 * yRel)));
-      const phiStart = -Math.PI / 2 - (theta / 2);
-
-      const shape = new THREE.Shape();
-      const numSegments = 48;
-      shape.moveTo(R * Math.cos(phiStart), R * Math.sin(phiStart));
-      for (let i = 1; i <= numSegments; i++) {
-        const phi = phiStart + (i / numSegments) * theta;
-        shape.lineTo(R * Math.cos(phi), R * Math.sin(phi));
-      }
-      shape.closePath();
-
-      const waterGeo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: L, bevelEnabled: false });
-      waterGeo.translate(0, 0, -L / 2);
-      const waterMat = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 0.1, metalness: 0.05, transparent: true, opacity: 0.85 });
-      waterMesh = new THREE.Mesh(waterGeo, waterMat);
-      mainGroup.add(waterMesh);
-    }
-
-    function animate3D() {
-      requestAnimationFrame(animate3D);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
-    window.onload = function() {
-      init3D();
-      atualizarSelectTrechos();
-      atualizarInterface();
+    <div class="header-right"><span class="version">PLATAFORMA DE AUDITORIA</span><span class="status" id="statusGeralBadge">SISTEMA ATIVO</span></div>
+  </header>
+
+  <section class="page-intro">
+    <div><div class="eyebrow">Central de fiscalização</div><h1>Auditoria hidráulica</h1><p>Analise os parâmetros do trecho, verifique a conformidade e explore a seção hidráulica em ambiente tridimensional.</p></div>
+    <div class="tag">ABNT NBR 9649 · Análise técnica</div>
+  </section>
+
+  <main class="layout">
+    <aside class="stack">
+      <section class="panel">
+        <div class="panel-head"><div><h2 class="panel-title">Parâmetros do trecho</h2><div class="panel-subtitle">Dados geométricos, topográficos e hidráulicos</div></div><span class="step">ENTRADA 01</span></div>
+        <div class="form-section">Identificação e geometria</div>
+        <div class="field"><label for="trechoId">Trecho selecionado</label><input type="text" id="trechoId" value="Trecho 01" readonly style="color:var(--cyan)"></div>
+        <div class="field"><label for="inputDn">Diâmetro nominal (mm)</label><input type="number" id="inputDn" value="150" step="25" onchange="atualizarTrechoManual()"></div>
+        <div class="form-section">Topografia</div>
+        <div class="field"><label for="inputDecliv">Declividade real (m/m)</label><input type="number" id="inputDecliv" value="0.0055" step="0.0001" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="inputCotaMont">Cota de montante (m)</label><input type="number" id="inputCotaMont" value="100.000" step="0.001" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="inputCotaJus">Cota de jusante (m)</label><input type="number" id="inputCotaJus" value="99.725" step="0.001" onchange="atualizarTrechoManual()"></div>
+        <div class="form-section">Condições de escoamento</div>
+        <div class="field"><label for="inputQ">Vazão de projeto (L/s)</label><input type="number" id="inputQ" value="2.50" step="0.1" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="selectMetodo">Método numérico</label><select id="selectMetodo" onchange="atualizarTrechoManual()"><option value="newton" selected>Newton–Raphson</option><option value="secante">Secante</option><option value="bisseccao">Bissecção</option></select></div>
+        <input type="file" id="fileCsv" class="file-input" accept=".csv,text/csv,text/plain" onchange="importarCsv(event)">
+        <div class="actions"><label for="fileCsv" class="btn btn-secondary file-label">↥ Importar CSV</label><button class="btn btn-primary" onclick="abrirModalLote()">▦ Auditar lote</button></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><div><h2 class="panel-title">Validação preliminar</h2><div class="panel-subtitle">Etapa 1 · Verificação de projeto</div></div><span class="step">ETAPA 01</span></div>
+        <div class="validation" id="validacaoProjetoBox"><div class="validation-icon">✓</div><div><strong>Validando parâmetros…</strong><p>Aguarde a análise do trecho.</p></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><div><h2 class="panel-title">Parecer técnico</h2><div class="panel-subtitle">Etapa 2 · Resultado da auditoria</div></div><span class="step">ETAPA 02</span></div>
+        <div class="report" id="parecerTexto">Processando laudo…</div>
+      </section>
+    </aside>
+
+    <section class="stack">
+      <section class="panel select-panel">
+        <label for="selectTrecho">Trecho em inspeção</label>
+        <select id="selectTrecho" onchange="mudarTrechoSelecionado()"><option value="0">Trecho 01 (PV01 - PV02)</option></select>
+      </section>
+
+      <section class="metrics" aria-label="Indicadores hidráulicos">
+        <article class="metric"><div class="metric-top"><span>Lâmina líquida</span><span class="metric-icon">≈</span></div><div class="metric-value" id="kpiY">--</div><div class="metric-note" id="kpiYRatio">y/D: --</div></article>
+        <article class="metric"><div class="metric-top"><span>Velocidade</span><span class="metric-icon">↗</span></div><div class="metric-value" id="kpiV">--</div><div class="metric-note">Referência: 0,60–5,00 m/s</div></article>
+        <article class="metric"><div class="metric-top"><span>Tensão trativa</span><span class="metric-icon">τ</span></div><div class="metric-value" id="kpiTau">--</div><div class="metric-note">Referência: ≥ 1,00 Pa</div></article>
+        <article class="metric"><div class="metric-top"><span>Iterações</span><span class="metric-icon">ƒx</span></div><div class="metric-value" id="kpiIt">--</div><div class="metric-note" id="kpiMetodoNome">Newton–Raphson</div></article>
+      </section>
+
+      <section class="panel viewport-panel">
+        <div class="viewport-head"><div><div class="viewport-heading">Modelo hidráulico 3D</div><div class="viewport-sub">Visualização interativa da seção e da lâmina calculada</div></div><span class="live-label">● MODELO INTERATIVO</span></div>
+        <div class="viewport"><div class="legend"><div class="legend-item"><span class="dot"></span>Tubulação translúcida</div><div class="legend-item"><span class="dot water"></span>Lâmina líquida</div><div class="legend-item"><span class="dot limit"></span>Limite de 75%</div></div><div id="viewport3d"></div><div class="blocked" id="msg3dBloqueado">Trecho bloqueado<span id="msg3dDetalhe">Inconformidade hidráulica ou geométrica</span></div><div class="viewport-help">Arraste para orbitar · Scroll para zoom</div></div>
+        <div class="viewport-footer"><span>Visualização Three.js</span><span>Representação geométrica do trecho selecionado</span></div>
+      </section>
+    </section>
+  </main>
+  <footer><span>SanearCheck 3D · Ferramenta de apoio à auditoria hidráulica</span><span>Os resultados dependem dos dados de entrada e da validação técnica responsável.</span></footer>
+</div>
+
+<div class="modal-backdrop" id="modalLote" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+  <div class="modal-box"><div class="panel-head"><div><h2 class="panel-title" id="modalTitulo">Auditoria consolidada da bacia</h2><div class="panel-subtitle">Resumo dos resultados por trecho</div></div><span class="step">LOTE</span></div><div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9"></div><div class="actions"><button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</button><button class="btn btn-primary btn-block" onclick="imprimirLaudoGeralLote()">Imprimir / salvar PDF</button></div></div>
+</div>
+
+<div id="folha-timbrada">
+  <div class="timbrado-header"><div class="timbrado-title"><h1>SanearCheck 3D — LAUDO TÉCNICO CONSOLIDADO DE BACIA</h1><p>Universidade Estadual Vale do Acaraú (UVA) — Engenharia Civil</p><p>Disciplina: Métodos Numéricos e Computacionais | Prof. Me. Audelis de Oliveira</p></div><div style="text-align:right;font-size:8pt;color:#64748b">Emissão: <span id="tmbGeralData"></span><br>Relatório Pericial Coletivo</div></div>
+  <div class="timbrado-box"><h3>1. SUMÁRIO EXECUTIVO DA BACIA</h3><table class="timbrado-table"><tr><td><strong>Total de Trechos Analisados:</strong> <span id="tmbTotTrechos"></span></td><td><strong>Trechos Conformes:</strong> <span id="tmbTotConf"></span></td></tr><tr><td><strong>Reprovados em Projeto (Etapa 1):</strong> <span id="tmbTotRepProj"></span></td><td><strong>Reprovados em Execução (Etapa 2):</strong> <span id="tmbTotRepObra"></span></td></tr></table></div>
+  <div class="timbrado-box"><h3>2. TABELA MASTER DE AUDITORIA HIDRÁULICA</h3><table class="timbrado-table"><thead><tr><th>Identificação</th><th>DN (mm)</th><th>I (m/m)</th><th>Q (L/s)</th><th>y/D (%)</th><th>Tau (Pa)</th><th>V (m/s)</th><th>Parecer</th></tr></thead><tbody id="tmbTabelaMaster"></tbody></table></div>
+  <div class="timbrado-status" id="tmbGeralStatusFinal"></div>
+  <div class="timbrado-footer"><div>Responsável Técnico: Sâmia Oliveira e Equipe de Engenharia Civil (UVA)</div><div>Normas de referência: ABNT NBR 9649 / NBR 17163</div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* Núcleo de cálculo preservado da versão fornecida; a reformulação concentra-se na interface. */
+let listaTrechos=[
+{id:"Trecho 01 (PV01 - PV02)",dn:150,decliv:0.0055,cotaMont:100.000,cotaJus:99.725,q:2.50,n:0.013},
+{id:"Trecho 02 (PV02 - PV03)",dn:150,decliv:0.0040,cotaMont:99.725,cotaJus:99.525,q:2.10,n:0.013},
+{id:"Trecho 03 (PV03 - PV04)",dn:100,decliv:0.0020,cotaMont:99.525,cotaJus:99.425,q:1.50,n:0.013}
+];
+let trechoAtualIndex=0;
+
+function calcGeometria(theta,D){
+ const A=(Math.pow(D,2)/8)*(theta-Math.sin(theta));
+ const P=(D/2)*theta;
+ const Rh=P>0?A/P:0;
+ const y=(D/2)*(1-Math.cos(theta/2));
+ return{A,P,Rh,y};
+}
+
+function fManning(theta,D,I0,n,Q){
+ const{A,Rh}=calcGeometria(theta,D);
+ const Q_calc=(1/n)*A*Math.pow(Rh,2/3)*Math.sqrt(I0);
+ return Q_calc-Q;
+}
+
+function calcQCheio(D,I0,n){
+ const A_cheio=(Math.PI*Math.pow(D,2))/4;
+ const Rh_cheio=D/4;
+ return(1/n)*A_cheio*Math.pow(Rh_cheio,2/3)*Math.sqrt(I0);
+}
+
+function resolverNewton(D,I0,n,Q,tol=1e-7,maxIt=50){
+ let theta=Math.PI;
+ const h=1e-5;
+ let it=0;
+ for(it=1;it<=maxIt;it++){
+  const f=fManning(theta,D,I0,n,Q);
+  if(Math.abs(f)<tol)break;
+  const df=(fManning(theta+h,D,I0,n,Q)-fManning(theta-h,D,I0,n,Q))/(2*h);
+  if(Math.abs(df)<1e-12)break;
+  const delta=f/df;
+  theta-=delta;
+  if(theta<=0.01)theta=0.01;
+  if(theta>=2*Math.PI*.999)theta=2*Math.PI*.999;
+  if(Math.abs(delta)<tol)break;
+ }
+ return{theta,iteracoes:it,convergiu:it<maxIt};
+}
+
+function resolverSecante(D,I0,n,Q,tol=1e-7,maxIt=50){
+ let x0=Math.PI*.8,x1=Math.PI*1.2,it=0;
+ for(it=1;it<=maxIt;it++){
+  const f0=fManning(x0,D,I0,n,Q),f1=fManning(x1,D,I0,n,Q);
+  if(Math.abs(f1)<tol||Math.abs(f1-f0)<1e-12)break;
+  const x2=x1-f1*(x1-x0)/(f1-f0);
+  x0=x1;
+  x1=x2;
+  if(x1<=.01)x1=.01;
+  if(x1>=2*Math.PI*.999)x1=2*Math.PI*.999;
+ }
+ return{theta:x1,iteracoes:it,convergiu:it<maxIt};
+}
+
+function resolverBisseccao(D,I0,n,Q,tol=1e-7,maxIt=50){
+ let a=.01,b=2*Math.PI*.999,m=0,it=0;
+ for(it=1;it<=maxIt;it++){
+  m=.5*(a+b);
+  const fm=fManning(m,D,I0,n,Q);
+  if(Math.abs(fm)<tol||.5*(b-a)<tol)break;
+  if(fManning(a,D,I0,n,Q)*fm<0)b=m;
+  else a=m;
+ }
+ return{theta:m,iteracoes:it,convergiu:it<maxIt};
+}
+
+function auditarTrechoCompleto(t){
+ const D=t.dn/1000,Q_m3s=t.q/1000;
+ const metodo=document.getElementById("selectMetodo").value;
+ const passDN=t.dn>=100;
+ const I_min=.0055*Math.pow(t.q,-.47);
+ const passDecliv=t.decliv>=I_min;
+ const passGravidade=t.cotaMont>t.cotaJus;
+ const projetoValido=passDN&&passDecliv&&passGravidade;
+
+ if(!projetoValido)return{
+  etapa1Valida:false,passDN,passDecliv,passGravidade,I_min,
+  bloqueado:true,
+  motivoBloqueio:!passDN?"Diâmetro < 100 mm":!passGravidade?"Inversão topográfica":"Declividade < I_min"
+ };
+
+ const Q_cheio=calcQCheio(D,t.decliv,t.n);
+ if(Q_m3s>=Q_cheio*1.05)return{
+  etapa1Valida:true,passDN,passDecliv,passGravidade,I_min,
+  bloqueado:true,afogado:true,
+  motivoBloqueio:"Conduto Afogado / Sob Pressão"
+ };
+
+ let sol;
+ if(metodo==="secante")sol=resolverSecante(D,t.decliv,t.n,Q_m3s);
+ else if(metodo==="bisseccao")sol=resolverBisseccao(D,t.decliv,t.n,Q_m3s);
+ else sol=resolverNewton(D,t.decliv,t.n,Q_m3s);
+
+ const{A,Rh,y}=calcGeometria(sol.theta,D);
+ const yd=y/D;
+ const V=A>0?Q_m3s/A:0;
+ const tau=9810*Rh*t.decliv;
+ const passYd=yd<=.75;
+ const passTau=tau>=1;
+ const passV=V>=.60&&V<=5;
+ const obraAprovada=passYd&&passTau&&passV;
+
+ return{
+  etapa1Valida:true,bloqueado:false,afogado:false,
+  passDN,passDecliv,passGravidade,I_min,y,yd,V,tau,
+  iteracoes:sol.iteracoes,passYd,passTau,passV,obraAprovada
+ };
+}
+
+function atualizarInterface(){
+ const t=listaTrechos[trechoAtualIndex];
+ if(!t)return;
+ const res=auditarTrechoCompleto(t);
+
+ document.getElementById("trechoId").value=t.id;
+ document.getElementById("inputDn").value=t.dn;
+ document.getElementById("inputDecliv").value=t.decliv;
+ document.getElementById("inputCotaMont").value=t.cotaMont.toFixed(3);
+ document.getElementById("inputCotaJus").value=t.cotaJus.toFixed(3);
+ document.getElementById("inputQ").value=t.q.toFixed(2);
+
+ const valBox=document.getElementById("validacaoProjetoBox");
+ const badge=document.getElementById("statusGeralBadge");
+ const parecer=document.getElementById("parecerTexto");
+ const msg=document.getElementById("msg3dBloqueado");
+
+ if(res.bloqueado){
+  valBox.className="validation fail";
+  valBox.innerHTML=`<div class="validation-icon">!</div><div><strong>Projeto reprovado na etapa preliminar</strong><p>${res.motivoBloqueio}</p></div>`;
+
+  badge.style.color="var(--red)";
+  badge.style.borderColor="rgba(251,113,133,.3)";
+  badge.style.background="rgba(251,113,133,.1)";
+  badge.textContent=res.afogado?"CONDUTO AFOGADO":"TRECHO BLOQUEADO";
+
+  ["kpiY","kpiV","kpiTau","kpiIt"].forEach(id=>{
+   document.getElementById(id).textContent="—";
+  });
+  document.getElementById("kpiYRatio").textContent="Análise bloqueada";
+
+  parecer.textContent=`LAUDO TÉCNICO · AUDITORIA HIDRÁULICA
+Trecho: ${t.id}
+${"─".repeat(35)}
+Status: AUDITORIA SUSPENSA
+Motivo: ${res.motivoBloqueio}
+
+A etapa de cálculo foi bloqueada pela validação preliminar.`;
+
+  msg.style.display="block";
+  document.getElementById("msg3dDetalhe").textContent=res.motivoBloqueio;
+  atualizarVisualizacao3D(t.dn/1000,0);
+  return;
+ }
+
+ msg.style.display="none";
+ valBox.className="validation";
+ valBox.innerHTML=`<div class="validation-icon">✓</div><div><strong>Parâmetros preliminares aprovados</strong><p>DN ${t.dn} mm · Declividade ${t.decliv.toFixed(4)} m/m · Escoamento por gravidade.</p></div>`;
+
+ badge.style.color=res.obraAprovada?"var(--green)":"var(--red)";
+ badge.style.borderColor=res.obraAprovada?"rgba(52,211,153,.3)":"rgba(251,113,133,.3)";
+ badge.style.background=res.obraAprovada?"rgba(52,211,153,.1)":"rgba(251,113,133,.1)";
+ badge.textContent=res.obraAprovada?"TRECHO CONFORME":"INCONFORMIDADE NA ETAPA 2";
+
+ document.getElementById("kpiY").textContent=(res.y*100).toFixed(2)+" cm";
+ document.getElementById("kpiYRatio").textContent=`y/D: ${(res.yd*100).toFixed(1)}%`;
+ document.getElementById("kpiV").textContent=res.V.toFixed(2)+" m/s";
+ document.getElementById("kpiTau").textContent=res.tau.toFixed(2)+" Pa";
+ document.getElementById("kpiIt").textContent=res.iteracoes;
+
+ const metodo=document.getElementById("selectMetodo").value;
+ document.getElementById("kpiMetodoNome").textContent=
+  metodo==="newton"?"Newton–Raphson":metodo==="secante"?"Secante":"Bissecção";
+
+ parecer.textContent=`LAUDO TÉCNICO · AUDITORIA HIDRÁULICA
+Identificação: ${t.id}
+${"─".repeat(35)}
+Lâmina líquida (y): ${(res.y*100).toFixed(2)} cm
+Relação y/D: ${(res.yd*100).toFixed(1)}%  [${res.passYd?"CONFORME":"REPROVADO"}]
+Velocidade (V): ${res.V.toFixed(2)} m/s  [${res.passV?"CONFORME":"REPROVADO"}]
+Tensão trativa (τ): ${res.tau.toFixed(2)} Pa  [${res.passTau?"CONFORME":"REPROVADO"}]
+Iterações: ${res.iteracoes}
+Método numérico: ${document.getElementById("kpiMetodoNome").textContent}
+${"─".repeat(35)}
+PARECER: ${res.obraAprovada?"CONFORME":"REPROVADO NA ETAPA 2"}`;
+
+ atualizarVisualizacao3D(t.dn/1000,res.y);
+}
+
+function atualizarTrechoManual(){
+ const t=listaTrechos[trechoAtualIndex];
+ const vals=["inputDn","inputDecliv","inputCotaMont","inputCotaJus","inputQ"].map(id=>parseFloat(document.getElementById(id).value));
+ if(vals.some(v=>!Number.isFinite(v)))return;
+ [t.dn,t.decliv,t.cotaMont,t.cotaJus,t.q]=vals;
+ atualizarInterface();
+}
+
+function mudarTrechoSelecionado(){
+ trechoAtualIndex=parseInt(document.getElementById("selectTrecho").value,10);
+ atualizarInterface();
+}
+
+function atualizarSelectTrechos(){
+ const sel=document.getElementById("selectTrecho");
+ sel.innerHTML="";
+ listaTrechos.forEach((t,i)=>{
+  const opt=document.createElement("option");
+  opt.value=i;
+  opt.textContent=t.id;
+  sel.appendChild(opt);
+ });
+ sel.value=trechoAtualIndex;
+}
+
+function imprimirLaudoGeralLote(){
+ document.getElementById("tmbGeralData").textContent=new Date().toLocaleDateString("pt-BR");
+ let aprovados=0,reprovadosProj=0,reprovadosObra=0,html="";
+
+ listaTrechos.forEach(t=>{
+  const r=auditarTrechoCompleto(t);
+  let status,color;
+
+  if(r.bloqueado){
+   reprovadosProj++;
+   status="Reprovado (Projeto)";
+   color="#991b1b";
+  }else if(r.obraAprovada){
+   aprovados++;
+   status="Conforme";
+   color="#166534";
+  }else{
+   reprovadosObra++;
+   status="Reprovado (Obra)";
+   color="#b45309";
+  }
+
+  html+=`<tr><td><strong>${escaparHtml(t.id)}</strong></td><td>${t.dn}</td><td>${t.decliv.toFixed(4)}</td><td>${t.q.toFixed(2)}</td><td>${r.bloqueado?"—":(r.yd*100).toFixed(1)+"%"}</td><td>${r.bloqueado?"—":r.tau.toFixed(2)}</td><td>${r.bloqueado?"—":r.V.toFixed(2)}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`;
+ });
+
+ document.getElementById("tmbTotTrechos").textContent=listaTrechos.length;
+ document.getElementById("tmbTotConf").textContent=aprovados;
+ document.getElementById("tmbTotRepProj").textContent=reprovadosProj;
+ document.getElementById("tmbTotRepObra").textContent=reprovadosObra;
+ document.getElementById("tmbTabelaMaster").innerHTML=html;
+
+ const sf=document.getElementById("tmbGeralStatusFinal");
+ if(!reprovadosProj&&!reprovadosObra){
+  sf.className="timbrado-status timbrado-aprovado";
+  sf.textContent="PARECER GERAL DA BACIA: 100% HOMOLOGADO E CONFORME";
+ }else{
+  sf.className="timbrado-status timbrado-reprovado";
+  sf.textContent=`PARECER GERAL DA BACIA: CONTÉM INCONFORMIDADES (${reprovadosProj+reprovadosObra} trechos pendentes)`;
+ }
+
+ fecharModalLote();
+ window.print();
+}
+
+function escaparHtml(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function importarCsv(event){
+ const file=event.target.files[0];
+ if(!file)return;
+
+ const reader=new FileReader();
+ reader.onload=e=>{
+  const lines=e.target.result.split(/\r?\n/);
+  const novos=[];
+
+  for(let i=1;i<lines.length;i++){
+   const l=lines[i].trim();
+   if(!l)continue;
+   const cols=l.split(",");
+
+   if(cols.length>=6){
+    const row={
+     id:cols[0].trim().replace(/^["']|["']$/g,""),
+     dn:parseFloat(cols[1]),
+     decliv:parseFloat(cols[2]),
+     cotaMont:parseFloat(cols[3]),
+     cotaJus:parseFloat(cols[4]),
+     q:parseFloat(cols[5]),
+     n:.013
     };
-  </script>
+
+    if(row.id&&[row.dn,row.decliv,row.cotaMont,row.cotaJus,row.q].every(Number.isFinite)){
+     novos.push(row);
+    }
+   }
+  }
+
+  if(novos.length){
+   listaTrechos=novos;
+   trechoAtualIndex=0;
+   atualizarSelectTrechos();
+   atualizarInterface();
+   abrirModalLote();
+  }else{
+   alert("Não foram encontrados registros válidos. Confira as seis colunas do CSV.");
+  }
+ };
+ reader.readAsText(file);
+ event.target.value="";
+}
+
+function abrirModalLote(){
+ let a=0,p=0,o=0;
+ listaTrechos.forEach(t=>{
+  const r=auditarTrechoCompleto(t);
+  if(r.bloqueado)p++;
+  else if(r.obraAprovada)a++;
+  else o++;
+ });
+
+ document.getElementById("modalLoteConteudo").innerHTML=
+ `<strong>Total de trechos:</strong> ${listaTrechos.length}<br><span style="color:var(--green)">● Conformes: ${a}</span><br><span style="color:var(--red)">● Reprovados em projeto (etapa 1): ${p}</span><br><span style="color:var(--amber)">● Reprovados em execução (etapa 2): ${o}</span><br><br>O relatório consolidado reúne os parâmetros e pareceres de todos os trechos carregados.`;
+
+ document.getElementById("modalLote").style.display="flex";
+}
+
+function fecharModalLote(){
+ document.getElementById("modalLote").style.display="none";
+}
+
+let scene,camera,renderer,controls,mainGroup,waterMesh;
+const R_BASE=1,L_BASE=4.2;
+
+function init3D(){
+ const container=document.getElementById("viewport3d");
+ const w=container.clientWidth||300,h=container.clientHeight||300;
+
+ scene=new THREE.Scene();
+ scene.background=new THREE.Color(0x091321);
+ camera=new THREE.PerspectiveCamera(35,w/h,.1,100);
+ camera.position.set(4,2.5,4.5);
+
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+ renderer.setSize(w,h);
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+ container.appendChild(renderer.domElement);
+
+ controls=new THREE.OrbitControls(camera,renderer.domElement);
+ controls.enableDamping=true;
+ controls.dampingFactor=.055;
+ controls.target.set(0,0,0);
+ controls.minDistance=3;
+ controls.maxDistance=8;
+
+ scene.add(new THREE.AmbientLight(0xffffff,.95));
+
+ const dl=new THREE.DirectionalLight(0x38bdf8,1.35);
+ dl.position.set(6,8,8);
+ scene.add(dl);
+
+ const fill=new THREE.PointLight(0x34d399,.55,15);
+ fill.position.set(-4,-2,-2);
+ scene.add(fill);
+
+ mainGroup=new THREE.Group();
+ scene.add(mainGroup);
+
+ const pipeGeo=new THREE.CylinderGeometry(R_BASE,R_BASE,L_BASE,64,1,true);
+ pipeGeo.rotateX(Math.PI/2);
+
+ const pipeMat=new THREE.MeshPhysicalMaterial({
+  color:0x9bb4ca,transparent:true,opacity:.22,
+  roughness:.18,transmission:.55,side:THREE.DoubleSide
+ });
+ mainGroup.add(new THREE.Mesh(pipeGeo,pipeMat));
+
+ const ringMat=new THREE.MeshStandardMaterial({
+  color:0x38bdf8,metalness:.55,roughness:.24
+ });
+
+ [-L_BASE/2,L_BASE/2].forEach(z=>{
+  const ring=new THREE.Mesh(
+   new THREE.TorusGeometry(R_BASE,.035,16,64),ringMat
+  );
+  ring.position.z=z;
+  mainGroup.add(ring);
+ });
+
+ const yLim=-R_BASE+2*R_BASE*.75;
+ const xLim=Math.sqrt(Math.max(0,R_BASE*R_BASE-yLim*yLim));
+ const lm=new THREE.LineDashedMaterial({
+  color:0xfb7185,dashSize:.15,gapSize:.1
+ });
+
+ [-xLim,xLim].forEach(x=>{
+  const line=new THREE.Line(
+   new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(x,yLim,-L_BASE/2),
+    new THREE.Vector3(x,yLim,L_BASE/2)
+   ]),
+   lm
+  );
+  line.computeLineDistances();
+  mainGroup.add(line);
+ });
+
+ atualizarVisualizacao3D(.15,.048);
+ animate3D();
+
+ if("ResizeObserver"in window){
+  new ResizeObserver(()=>redimensionar3D()).observe(container);
+ }else{
+  window.addEventListener("resize",redimensionar3D);
+ }
+}
+
+function redimensionar3D(){
+ if(!renderer||!camera)return;
+ const c=document.getElementById("viewport3d");
+ const w=c.clientWidth,h=c.clientHeight;
+ if(!w||!h)return;
+ camera.aspect=w/h;
+ camera.updateProjectionMatrix();
+ renderer.setSize(w,h);
+}
+
+function atualizarVisualizacao3D(D,y){
+ if(!mainGroup)return;
+
+ if(waterMesh){
+  mainGroup.remove(waterMesh);
+  waterMesh.geometry.dispose();
+  waterMesh.material.dispose();
+  waterMesh=null;
+ }
+
+ if(y<=.001||D<=0)return;
+
+ const yRel=Math.min(Math.max(y/D,.01),.99);
+ const R=R_BASE*.996,L=L_BASE*.998;
+ const theta=2*Math.acos(Math.max(-1,Math.min(1,1-2*yRel)));
+ const phiStart=-Math.PI/2-theta/2;
+ const shape=new THREE.Shape(),n=64;
+
+ shape.moveTo(R*Math.cos(phiStart),R*Math.sin(phiStart));
+
+ for(let i=1;i<=n;i++){
+  const phi=phiStart+i/n*theta;
+  shape.lineTo(R*Math.cos(phi),R*Math.sin(phi));
+ }
+
+ shape.closePath();
+
+ const geo=new THREE.ExtrudeGeometry(shape,{
+  steps:1,depth:L,bevelEnabled:false
+ });
+ geo.translate(0,0,-L/2);
+
+ waterMesh=new THREE.Mesh(
+  geo,
+  new THREE.MeshStandardMaterial({
+   color:0x0ea5e9,roughness:.16,metalness:.04,
+   transparent:true,opacity:.88,side:THREE.DoubleSide
+  })
+ );
+ mainGroup.add(waterMesh);
+}
+
+function animate3D(){
+ requestAnimationFrame(animate3D);
+ if(controls)controls.update();
+ if(renderer&&scene&&camera)renderer.render(scene,camera);
+}
+
+window.addEventListener("load",()=>{
+ init3D();
+ atualizarSelectTrechos();
+ atualizarInterface();
+});
+
+document.getElementById("modalLote").addEventListener("click",e=>{
+ if(e.target.id==="modalLote")fecharModalLote();
+});
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape")fecharModalLote();
+});
+</script>
 </body>
 </html>
