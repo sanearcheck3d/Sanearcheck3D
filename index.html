@@ -92,18 +92,18 @@ h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1.2px;line-height:1.12;margin:
 .modal-box .report{margin:15px 0}
 footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;color:#6f849d;font-size:11px}
 
-/* Estilo exclusivo para folha timbrada impressa sem páginas em branco */
+/* Estilo para impressão limpa em folha timbrada (Multipágina correta) */
 #folha-timbrada { display: none; }
 
 @media print {
   @page { size: A4 portrait; margin: 10mm; }
-  html, body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
-  .app, .modal-backdrop, .modal-box { display: none !important; }
-  
+  body * { visibility: hidden; }
+  body { background: #fff !important; color: #000 !important; padding: 0 !important; }
+  #folha-timbrada, #folha-timbrada * { visibility: visible; }
   #folha-timbrada {
     display: block !important;
-    position: static !important;
-    width: 100% !important;
+    position: absolute;
+    left: 0; top: 0; width: 100%;
     font-family: Arial, sans-serif;
     color: #0f172a;
     background: #fff;
@@ -119,7 +119,6 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
   .timbrado-title h1 { font-size: 12pt; color: #0284c7; margin-bottom: 2px; }
   .timbrado-title p { font-size: 7.5pt; color: #475569; margin: 0; }
   .timbrado-box {
-    page-break-inside: avoid;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
     padding: 6px 8px;
@@ -133,7 +132,7 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
     padding-bottom: 2px;
     margin-bottom: 4px;
   }
-  .timbrado-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+  .timbrado-table { width: 100%; border-collapse: collapse; margin: 4px 0; page-break-inside: auto; }
   .timbrado-table tr { page-break-inside: avoid; page-break-after: auto; }
   .timbrado-table th, .timbrado-table td {
     border: 1px solid #cbd5e1;
@@ -143,7 +142,6 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
   }
   .timbrado-table th { background: #f8fafc; font-weight: bold; }
   .timbrado-status {
-    page-break-inside: avoid;
     padding: 5px;
     text-align: center;
     font-weight: bold;
@@ -154,7 +152,6 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
   .timbrado-aprovado { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
   .timbrado-reprovado { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
   .timbrado-footer {
-    page-break-inside: avoid;
     margin-top: 10px;
     border-top: 1px solid #cbd5e1;
     padding-top: 4px;
@@ -371,7 +368,7 @@ footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;c
       </div>
       <span class="step">LOTE</span>
     </div>
-    <div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9; max-height: 340px; overflow-y: auto;"></div>
+    <div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9"></div>
     <div class="actions">
       <button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</button>
       <button class="btn btn-primary btn-block" onclick="imprimirLaudoGeralLote()">Imprimir / salvar PDF</button>
@@ -640,48 +637,20 @@ function importarCsv(event){
 
 function abrirModalLote(){
   let a=0,p=0,o=0;
-  let htmlTabelaModal = "";
 
   listaTrechos.forEach(t=>{
     const r=auditarTrechoCompleto(t);
-    let st = "", cl = "";
-    if(r.bloqueado){ p++; st="Reprovado (Proj)"; cl="#fb7185"; }
-    else if(r.obraAprovada){ a++; st="Conforme"; cl="#27e36b"; }
-    else { o++; st="Reprovado (Obra)"; cl="#fbbf24"; }
-
-    htmlTabelaModal += `
-      <tr>
-        <td style="padding: 6px; border-bottom: 1px solid #17436a;">${escaparHtml(t.id)}</td>
-        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center;">${t.dn}</td>
-        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center;">${t.decliv.toFixed(4)}</td>
-        <td style="padding: 6px; border-bottom: 1px solid #17436a; text-align: center; color: ${cl}; font-weight: bold;">${st}</td>
-      </tr>
-    `;
+    if(r.bloqueado)p++;
+    else if(r.obraAprovada)a++;
+    else o++;
   });
 
-  document.getElementById("modalLoteConteudo").innerHTML=`
-    <div style="margin-bottom: 12px;">
-      <strong>Total de trechos:</strong> ${listaTrechos.length}<br>
-      <span style="color:var(--green)">● Conformes: ${a}</span> | 
-      <span style="color:var(--red)">● Reprovados Projeto: ${p}</span> | 
-      <span style="color:var(--amber)">● Reprovados Obra: ${o}</span>
-    </div>
-    <div style="max-height: 260px; overflow-y: auto; border: 1px solid #17436a; border-radius: 8px;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-        <thead>
-          <tr style="background: #071a31; position: sticky; top: 0;">
-            <th style="padding: 6px; text-align: left; border-bottom: 1px solid #17436a;">Identificação</th>
-            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">DN</th>
-            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">Decliv.</th>
-            <th style="padding: 6px; text-align: center; border-bottom: 1px solid #17436a;">Parecer</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${htmlTabelaModal}
-        </tbody>
-      </table>
-    </div>
-  `;
+  document.getElementById("modalLoteConteudo").innerHTML=
+    `<strong>Total de trechos:</strong> ${listaTrechos.length}<br>
+    <span style="color:var(--green)">● Conformes: ${a}</span><br>
+    <span style="color:var(--red)">● Reprovados em projeto (etapa 1): ${p}</span><br>
+    <span style="color:var(--amber)">● Reprovados em execução (etapa 2): ${o}</span><br><br>
+    O relatório consolidado reúne os parâmetros e pareceres de todos os trechos carregados.`;
 
   document.getElementById("modalLote").style.display="flex";
 }
