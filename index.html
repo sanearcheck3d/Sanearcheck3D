@@ -1,346 +1,256 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SanearCheck 3D | Auditoria Hidráulica</title>
+<meta name="theme-color" content="#041226">
 <style>
-:root{--bg:#08111f;--panel:#111e30;--line:#293d56;--text:#eef6ff;--muted:#9aacc2;--cyan:#38bdf8;--green:#34d399;--red:#fb7185;--amber:#fbbf24}
+:root{
+  --bg:#041226;--surface:#071a31;--surface-2:#0a2340;--surface-3:#102d4b;
+  --border:#17436a;--text:#f3f8ff;--muted:#9bb8d4;--cyan:#08c8f0;
+  --cyan-strong:#079de0;--green:#27e36b;--red:#fb7185;--amber:#fbbf24;
+  --radius:16px;--shadow:0 18px 50px rgba(0,0,0,.22)
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}
-header{padding:20px 5%;background:#0d192a;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.logo{width:48px;height:48px;border-radius:13px;background:#123b5a;display:grid;place-items:center;color:var(--cyan);font-size:27px}
-h1{font-size:22px;margin:0}header p{margin:3px 0 0;color:var(--muted);font-size:12px}
-main{max-width:1450px;margin:auto;padding:24px}
-.intro{margin:0 0 20px}.intro h2{font-size:28px;margin:0 0 5px}.intro p{color:var(--muted);margin:0}
-.layout{display:grid;grid-template-columns:350px minmax(0,1fr);gap:18px}
-.stack{display:grid;gap:18px;align-content:start}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:19px;min-width:0}
-h3{font-size:15px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted);margin:0 0 16px}
-label{display:block;color:#c6d5e6;font-size:12px;margin-bottom:5px}
-.field{margin:12px 0}
-input,select{width:100%;padding:10px;background:#081321;color:var(--text);border:1px solid #30445d;border-radius:8px}
-button,.upload{display:inline-block;border:0;border-radius:8px;padding:11px 14px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center}
-.primary{background:#0284c7;color:white}.secondary{background:#203148;color:#e6f1ff;border:1px solid #3a506b}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
-.upload{background:#203148;border:1px solid #3a506b;color:white}
-input[type=file]{display:none}
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
-.metric{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
-.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:23px;margin-top:8px;overflow-wrap:anywhere}
-.status{display:inline-block;padding:5px 9px;border-radius:7px;font-weight:bold;font-size:11px;background:#203148}
-.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}
-#viewport3d{height:390px;width:100%;border-radius:10px;overflow:hidden;background:#081321}
-.report{white-space:pre-wrap;overflow-wrap:anywhere;background:#081321;border:1px solid var(--line);border-radius:9px;padding:14px;color:#d5e4f5;min-height:130px;font:12px/1.7 monospace}
-table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}
-th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}
-th{color:var(--muted)}.table-wrap{overflow:auto}
-footer{padding:20px;text-align:center;color:#8195ad;font-size:11px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:500px){main{padding:12px}.metrics{gap:7px}.metric{padding:10px}.metric strong{font-size:19px}header{padding:15px}.intro h2{font-size:23px}#viewport3d{height:300px}}
-@media print{body{background:white;color:#111}header,footer,.no-print,.layout .stack:first-child{display:none!important}main{padding:0}.panel,.metric{background:white;color:#111;border:1px solid #ccc;box-shadow:none}.metric span,.sub{color:#444}.report{background:white;color:#111;border-color:#ccc}.metrics{grid-template-columns:repeat(4,1fr)}#viewport3d{display:none}}
+body{margin:0;background:radial-gradient(ellipse at 75% -20%,rgba(14,165,233,.13),transparent 42%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:1500px;margin:auto;padding:22px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 20px;background:rgba(14,23,39,.92);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.brand-mark{width:54px;height:54px;flex:none;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#06254a,#07182d);border:1px solid #12639a;color:var(--cyan);box-shadow:0 0 24px rgba(8,200,240,.12)}
+.brand-mark svg{width:29px;height:29px}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:-.7px;line-height:1.15}
+.brand-name span{color:var(--cyan)}
+.brand-mark img{display:block}
+.topbar{background:linear-gradient(110deg,rgba(7,26,49,.98),rgba(4,18,38,.96));border-color:#16466e}
+.panel{border-color:#173b5b}
+.btn-primary{background:linear-gradient(110deg,#078fc9,#08c8f0);color:#031426}
+.metric-value{color:#eafaff}
+.brand-sub{color:var(--muted);font-size:11px;letter-spacing:1.4px;margin-top:5px}
+.header-right{display:flex;align-items:center;gap:12px}
+.version{color:var(--muted);font-size:12px}
+.status{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.5px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--green)}
+.status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
+.page-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:28px 2px 18px}
+.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}
+h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1.2px;line-height:1.12;margin:7px 0}
+.page-intro p{margin:0;color:var(--muted);max-width:650px}
+.tag{border:1px solid var(--border);border-radius:9px;padding:8px 11px;color:#b9c9dc;font-size:12px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(310px,390px) minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:grid;gap:16px;min-width:0}
+.panel{background:linear-gradient(180deg,rgba(18,31,50,.96),rgba(14,23,39,.98));border:1px solid var(--border);border-radius:var(--radius);padding:19px;box-shadow:var(--shadow);min-width:0}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.panel-title{font-size:14px;font-weight:750;letter-spacing:-.2px;margin:0}
+.panel-subtitle{font-size:12px;color:var(--muted);margin-top:4px}
+.step{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--cyan);background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.18);border-radius:7px;padding:5px 7px;white-space:nowrap}
+.form-section{font-size:10px;text-transform:uppercase;letter-spacing:1.25px;font-weight:800;color:#8ea6c1;margin:18px 0 10px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) minmax(112px,145px);align-items:center;gap:12px;margin:11px 0}
+.field label{font-size:12px;color:#c0cfe0}
+.field input,.field select{width:100%;min-width:0;background:#091321;color:var(--text);border:1px solid #2a3b52;border-radius:9px;padding:10px 11px;text-align:right;outline:none;transition:border-color .2s,box-shadow .2s}
+.field select{text-align:left}
+.field input:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(56,189,248,.1)}
+.actions{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 13px;border-radius:10px;border:1px solid transparent;font-weight:750;font-size:12px;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;box-shadow:0 7px 20px rgba(14,165,233,.16)}
+.btn-secondary{background:#18263a;border-color:#30435c;color:#dce8f5}
+.btn-success{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.28);color:var(--green)}
+.btn-block{width:100%}
+.file-input{display:none}
+.file-label{flex:1}
+.validation{display:flex;gap:11px;align-items:flex-start;padding:13px;border-radius:11px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#a7f3d0}
+.validation.fail{background:rgba(251,113,133,.08);border-color:rgba(251,113,133,.25);color:#fecdd3}
+.validation-icon{font-size:17px;line-height:1.2}
+.validation strong{display:block;font-size:12px;margin-bottom:3px}
+.validation p{margin:0;font-size:12px;color:inherit;opacity:.88}
+.report{white-space:pre-wrap;overflow-wrap:anywhere;background:#091321;border:1px solid #24354b;border-radius:11px;padding:15px;color:#c8d8ea;font:12px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:120px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.metric{background:linear-gradient(180deg,#121f32,#0e1727);border:1px solid var(--border);border-radius:14px;padding:16px;min-width:0}
+.metric-top{display:flex;align-items:center;justify-content:space-between;gap:7px;color:var(--muted);font-size:11px}
+.metric-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:rgba(56,189,248,.1);color:var(--cyan);font-size:15px}
+.metric-value{font-size:clamp(19px,2.2vw,27px);font-weight:800;letter-spacing:-.9px;margin:10px 0 2px;overflow-wrap:anywhere}
+.metric-note{font-size:11px;color:var(--muted)}
+.select-panel{display:flex;align-items:center;gap:14px}
+.select-panel label{font-weight:700;font-size:12px;white-space:nowrap}
+.select-panel select{flex:1;min-width:0;background:#091321;border:1px solid #2a3b52;border-radius:9px;color:var(--text);padding:10px}
+.viewport-panel{padding:0;overflow:hidden}
+.viewport-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 19px;border-bottom:1px solid var(--border)}
+.viewport-heading{font-weight:750}
+.viewport-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.live-label{font-size:10px;letter-spacing:1px;font-weight:800;color:var(--green)}
+.viewport{height:420px;position:relative;background:radial-gradient(ellipse at 50% 45%,#10263a 0%,#091321 58%,#080e19 100%);overflow:hidden}
+.viewport:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.045) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent);pointer-events:none}
+#viewport3d{position:absolute;inset:0;width:100%;height:100%;display:block}
+.legend{position:absolute;top:14px;left:14px;z-index:2;display:grid;gap:8px;padding:11px 12px;border:1px solid rgba(73,100,130,.55);border-radius:11px;background:rgba(8,14,25,.84);backdrop-filter:blur(10px);font-size:11px;color:#c2d1e2}
+.legend-item{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:3px;background:var(--cyan)}
+.dot.water{background:#0ea5e9}.dot.limit{background:var(--red)}
+.viewport-help{position:absolute;right:14px;bottom:12px;z-index:2;padding:6px 9px;border-radius:8px;background:rgba(8,14,25,.8);color:#9aadc4;font-size:10px}
+.blocked{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:90%;text-align:center;padding:15px 18px;border:1px solid rgba(251,113,133,.7);border-radius:12px;background:rgba(65,16,31,.9);color:#fecdd3;font-weight:800;font-size:12px;display:none}
+.blocked span{display:block;font-weight:500;font-size:11px;margin-top:5px}
+.viewport-footer{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,14,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+.modal-box{width:min(560px,100%);background:#101b2d;border:1px solid #30435b;border-radius:18px;padding:22px;box-shadow:0 25px 90px #0009}
+.modal-box .report{margin:15px 0}
+footer{display:flex;justify-content:space-between;gap:12px;margin:22px 3px 4px;color:#6f849d;font-size:11px}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.viewport{height:370px}}
+@media(max-width:760px){.app{padding:12px}.topbar{padding:13px;border-radius:15px}.brand-mark{width:40px;height:40px}.brand-name{font-size:16px}.brand-sub{font-size:9px;letter-spacing:1px}.version{display:none}.page-intro{display:block;margin:23px 2px 16px}.page-intro .tag{display:inline-block;margin-top:12px}.layout{grid-template-columns:1fr}.stack{gap:13px}.panel{padding:15px}.metrics{gap:8px}.metric{padding:12px}.metric-value{font-size:23px}.viewport{height:330px}.viewport-head{padding:14px}.field{grid-template-columns:minmax(0,1fr) minmax(115px,42%)}footer{flex-direction:column}.select-panel{align-items:flex-start;flex-direction:column}.select-panel select{width:100%}}
+@media(max-width:390px){.header-right .status{font-size:9px;padding:6px 8px}.brand{gap:9px}.brand-sub{letter-spacing:.4px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.field{gap:7px}.field label{font-size:11px}.actions .btn{font-size:11px;padding:10px 9px}.legend{font-size:10px;top:8px;left:8px}}
+
+/* Folha de impressão A4 limpa e sem páginas em branco extras */
+#folha-timbrada{display:none}
+@media print{
+ @page{size:A4 portrait;margin:10mm}
+ html,body{background:#fff!important;color:#0f172a!important;height:auto!important;overflow:visible!important;margin:0!important;padding:0!important}
+ .app,.modal-backdrop,.modal-box{display:none!important}
+ #folha-timbrada{display:block!important;position:static!important;width:100%!important;font-family:Arial,sans-serif;color:#0f172a;background:#fff}
+ .timbrado-header{display:flex;justify-content:space-between;gap:15px;border-bottom:2px solid #0284c7;padding-bottom:9px;margin-bottom:12px}
+ .timbrado-title h1{font-size:13pt;color:#0284c7;margin:0 0 4px}.timbrado-title p{font-size:8pt;color:#475569;margin:2px 0}
+ .timbrado-box{page-break-inside:avoid;break-inside:avoid;border:1px solid #cbd5e1;border-radius:5px;padding:8px;margin-bottom:9px;font-size:8pt}
+ .timbrado-box h3{font-size:9pt;color:#0369a1;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:0 0 6px}
+ .timbrado-table{width:100%;border-collapse:collapse;margin:6px 0}
+ .timbrado-table tr{page-break-inside:avoid;break-inside:avoid}
+ .timbrado-table th,.timbrado-table td{border:1px solid #cbd5e1;padding:4px;font-size:7pt;text-align:left}
+ .timbrado-table th{background:#f1f5f9}
+ .timbrado-status{page-break-inside:avoid;break-inside:avoid;padding:7px;text-align:center;font-weight:bold;border-radius:4px;margin:10px 0}
+ .timbrado-aprovado{background:#dcfce7;color:#166534;border:1px solid #86efac}
+ .timbrado-reprovado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+ .timbrado-footer{page-break-inside:avoid;break-inside:avoid;display:flex;justify-content:space-between;gap:10px;border-top:1px solid #cbd5e1;padding-top:7px;color:#64748b;font-size:7pt}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">◉</div>
-  <div>
-    <h1>SanearCheck <span style="color:#38bdf8">3D</span></h1>
-    <p>AUDITORIA E FISCALIZAÇÃO HIDRÁULICA</p>
-  </div>
-</header>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><img src="data:image/png;base64,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" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:14px"></div>
+      <div><div class="brand-name">Sanear<span style="color:#f3f8ff">Check</span> <span>3D</span></div><div class="brand-sub">ENGENHARIA SANITÁRIA EM 3 DIMENSÕES</div></div>
+    </div>
+    <div class="header-right"><span class="version">PLATAFORMA DE AUDITORIA</span><span class="status" id="statusGeralBadge">SISTEMA ATIVO</span></div>
+  </header>
 
-<main>
-  <section class="intro">
-    <h2>Auditoria de redes coletoras</h2>
-    <p>Análise preliminar de trechos de esgoto sanitário por gravidade.</p>
+  <section class="page-intro">
+    <div><div class="eyebrow">Central de fiscalização</div><h1>Auditoria hidráulica</h1><p>Analise os parâmetros do trecho, verifique a conformidade e explore a seção hidráulica em ambiente tridimensional.</p></div>
+    <div class="tag">ABNT NBR 9649 · Análise técnica</div>
   </section>
 
-  <div class="layout">
-    <div class="stack">
+  <main class="layout">
+    <aside class="stack">
       <section class="panel">
-        <h3>Parâmetros do trecho</h3>
-        <p class="sub">Edite os dados e execute a auditoria.</p>
-
-        <div class="field">
-          <label for="idTrecho">Identificação do trecho</label>
-          <input id="idTrecho" value="Trecho 01 (PV01 - PV02)">
-        </div>
-        <div class="field">
-          <label for="inputDn">Diâmetro nominal DN (mm)</label>
-          <select id="inputDn">
-            <option value="100">100 mm</option>
-            <option value="150" selected>150 mm</option>
-            <option value="200">200 mm</option>
-            <option value="250">250 mm</option>
-            <option value="300">300 mm</option>
-            <option value="400">400 mm</option>
-            <option value="500">500 mm</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="inputDecliv">Declividade (m/m)</label>
-          <input id="inputDecliv" type="number" min="0.0001" step="0.0001" value="0.0055">
-        </div>
-        <div class="field">
-          <label for="inputQ">Vazão de projeto (L/s)</label>
-          <input id="inputQ" type="number" min="0.01" step="0.01" value="2.50">
-        </div>
-        <div class="field">
-          <label for="inputN">Coeficiente de Manning (n)</label>
-          <input id="inputN" type="number" min="0.008" max="0.030" step="0.001" value="0.013">
-        </div>
-        <div class="field">
-          <label for="limiteY">Lâmina máxima adotada (y/D)</label>
-          <input id="limiteY" type="number" min="0.1" max="0.95" step="0.05" value="0.75">
-        </div>
-        <div class="field">
-          <label for="limiteVmin">Velocidade mínima de referência (m/s)</label>
-          <input id="limiteVmin" type="number" min="0" step="0.01" value="0.60">
-        </div>
-        <div class="field">
-          <label for="limiteVmax">Velocidade máxima de referência (m/s)</label>
-          <input id="limiteVmax" type="number" min="0.1" step="0.1" value="5.00">
-        </div>
-        <div class="field">
-          <label for="limiteTau">Tensão trativa mínima de referência (Pa)</label>
-          <input id="limiteTau" type="number" min="0" step="0.1" value="1.00">
-        </div>
-        <div class="actions">
-          <button class="primary" onclick="auditar()">Auditar trecho</button>
-          <button class="secondary" onclick="restaurar()">Restaurar exemplo</button>
-        </div>
-        <div class="actions no-print">
-          <label class="upload" for="csvFile">Importar CSV</label>
-          <input id="csvFile" type="file" accept=".csv,text/csv" onchange="importarCSV(event)">
-          <button class="secondary" onclick="window.print()">Imprimir laudo</button>
-        </div>
-        <p class="sub" style="margin-top:14px">A importação CSV espera colunas: trecho, DN_mm, declividade, vazao_Ls, Manning_n.</p>
-      </section>
-    </div>
-
-    <div class="stack">
-      <div class="metrics">
-        <div class="metric"><span>Lâmina calculada</span><strong id="kpiY">—</strong><span id="kpiRatio">y/D</span></div>
-        <div class="metric"><span>Velocidade média</span><strong id="kpiV">—</strong><span>m/s</span></div>
-        <div class="metric"><span>Tensão trativa</span><strong id="kpiTau">—</strong><span>Pa</span></div>
-        <div class="metric"><span>Iterações</span><strong id="kpiIter">—</strong><span>Busca numérica</span></div>
-      </div>
-
-      <section class="panel">
-        <h3>Modelo hidráulico 3D</h3>
-        <p class="sub">Gire a visualização com o mouse; use a roda para aproximar.</p>
-        <div id="viewport3d"></div>
+        <div class="panel-head"><div><h2 class="panel-title">Parâmetros do trecho</h2><div class="panel-subtitle">Dados geométricos, topográficos e hidráulicos</div></div><span class="step">ENTRADA 01</span></div>
+        <div class="form-section">Identificação e geometria</div>
+        <div class="field"><label for="trechoId">Trecho selecionado</label><input type="text" id="trechoId" value="Trecho 01" readonly style="color:var(--cyan)"></div>
+        <div class="field"><label for="inputDn">Diâmetro nominal (mm)</label><input type="number" id="inputDn" value="150" step="25" onchange="atualizarTrechoManual()"></div>
+        <div class="form-section">Topografia</div>
+        <div class="field"><label for="inputDecliv">Declividade real (m/m)</label><input type="number" id="inputDecliv" value="0.0055" step="0.0001" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="inputCotaMont">Cota de montante (m)</label><input type="number" id="inputCotaMont" value="100.000" step="0.001" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="inputCotaJus">Cota de jusante (m)</label><input type="number" id="inputCotaJus" value="99.725" step="0.001" onchange="atualizarTrechoManual()"></div>
+        <div class="form-section">Condições de escoamento</div>
+        <div class="field"><label for="inputQ">Vazão de projeto (L/s)</label><input type="number" id="inputQ" value="2.50" step="0.1" onchange="atualizarTrechoManual()"></div>
+        <div class="field"><label for="selectMetodo">Método numérico</label><select id="selectMetodo" onchange="atualizarTrechoManual()"><option value="newton" selected>Newton–Raphson</option><option value="secante">Secante</option><option value="bisseccao">Bissecção</option></select></div>
+        <input type="file" id="fileCsv" class="file-input" accept=".csv,text/csv,text/plain" onchange="importarCsv(event)">
+        <div class="actions"><label for="fileCsv" class="btn btn-secondary file-label">↥ Importar CSV</label><button class="btn btn-primary" onclick="abrirModalLote()">▦ Auditar lote</button></div>
       </section>
 
       <section class="panel">
-        <h3>Parecer técnico preliminar</h3>
-        <p class="sub">O resultado deve ser verificado pelo responsável técnico.</p>
-        <div id="status" class="status">Aguardando auditoria</div>
-        <div id="relatorio" class="report" style="margin-top:12px">Informe os parâmetros e clique em “Auditar trecho”.</div>
+        <div class="panel-head"><div><h2 class="panel-title">Validação preliminar</h2><div class="panel-subtitle">Etapa 1 · Verificação de projeto</div></div><span class="step">ETAPA 01</span></div>
+        <div class="validation" id="validacaoProjetoBox"><div class="validation-icon">✓</div><div><strong>Validando parâmetros…</strong><p>Aguarde a análise do trecho.</p></div></div>
       </section>
 
       <section class="panel">
-        <h3>Auditoria em lote</h3>
-        <p class="sub">Resumo dos registros importados por CSV.</p>
-        <div id="resumoLote" class="report">Nenhum arquivo importado.</div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Trecho</th><th>DN (mm)</th><th>Declividade</th><th>Vazão (L/s)</th><th>Parecer</th></tr></thead>
-          <tbody id="tabelaLote"></tbody>
-        </table></div>
+        <div class="panel-head"><div><h2 class="panel-title">Parecer técnico</h2><div class="panel-subtitle">Etapa 2 · Resultado da auditoria</div></div><span class="step">ETAPA 02</span></div>
+        <div class="report" id="parecerTexto">Processando laudo…</div>
       </section>
-    </div>
-  </div>
-</main>
-<footer>SanearCheck 3D · Ferramenta de apoio à auditoria hidráulica · Verifique as normas vigentes e os critérios do projeto.</footer>
+    </aside>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <section class="stack">
+      <section class="panel select-panel">
+        <label for="selectTrecho">Trecho em inspeção</label>
+        <select id="selectTrecho" onchange="mudarTrechoSelecionado()"><option value="0">Trecho 01 (PV01 - PV02)</option></select>
+      </section>
+
+      <section class="metrics" aria-label="Indicadores hidráulicos">
+        <article class="metric"><div class="metric-top"><span>Lâmina líquida</span><span class="metric-icon">≈</span></div><div class="metric-value" id="kpiY">--</div><div class="metric-note" id="kpiYRatio">y/D: --</div></article>
+        <article class="metric"><div class="metric-top"><span>Velocidade</span><span class="metric-icon">↗</span></div><div class="metric-value" id="kpiV">--</div><div class="metric-note">Referência: 0,60–5,00 m/s</div></article>
+        <article class="metric"><div class="metric-top"><span>Tensão trativa</span><span class="metric-icon">τ</span></div><div class="metric-value" id="kpiTau">--</div><div class="metric-note">Referência: ≥ 1,00 Pa</div></article>
+        <article class="metric"><div class="metric-top"><span>Iterações</span><span class="metric-icon">ƒx</span></div><div class="metric-value" id="kpiIt">--</div><div class="metric-note" id="kpiMetodoNome">Newton–Raphson</div></article>
+      </section>
+
+      <section class="panel viewport-panel">
+        <div class="viewport-head"><div><div class="viewport-heading">Modelo hidráulico 3D</div><div class="viewport-sub">Visualização interativa da seção e da lâmina calculada</div></div><span class="live-label">● MODELO INTERATIVO</span></div>
+        <div class="viewport"><div class="legend"><div class="legend-item"><span class="dot"></span>Tubulação translúcida</div><div class="legend-item"><span class="dot water"></span>Lâmina líquida</div><div class="legend-item"><span class="dot limit"></span>Limite de 75%</div></div><div id="viewport3d"></div><div class="blocked" id="msg3dBloqueado">Trecho bloqueado<span id="msg3dDetalhe">Inconformidade hidráulica ou geométrica</span></div><div class="viewport-help">Arraste para orbitar · Scroll para zoom</div></div>
+        <div class="viewport-footer"><span>Visualização Three.js</span><span>Representação geométrica do trecho selecionado</span></div>
+      </section>
+    </section>
+  </main>
+  <footer><span>SanearCheck 3D · Ferramenta de apoio à auditoria hidráulica</span><span>Os resultados dependem dos dados de entrada e da validação técnica responsável.</span></footer>
+</div>
+
+<div class="modal-backdrop" id="modalLote" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+  <div class="modal-box"><div class="panel-head"><div><h2 class="panel-title" id="modalTitulo">Auditoria consolidada da bacia</h2><div class="panel-subtitle">Resumo dos resultados por trecho</div></div><span class="step">LOTE</span></div><div id="modalLoteConteudo" class="report" style="font-family:inherit;line-height:1.9"></div><div class="actions"><button class="btn btn-secondary" onclick="fecharModalLote()">Fechar</button><button class="btn btn-primary btn-block" onclick="imprimirLaudoGeralLote()">Imprimir / salvar PDF</button></div></div>
+</div>
+
+<div id="folha-timbrada">
+  <div class="timbrado-header"><div class="timbrado-title"><h1>SanearCheck 3D — LAUDO TÉCNICO CONSOLIDADO DE BACIA</h1><p>Universidade Estadual Vale do Acaraú (UVA) — Engenharia Civil</p><p>Disciplina: Métodos Numéricos e Computacionais | Prof. Me. Audelis de Oliveira</p></div><div style="text-align:right;font-size:8pt;color:#64748b">Emissão: <span id="tmbGeralData"></span><br>Relatório Pericial Coletivo</div></div>
+  <div class="timbrado-box"><h3>1. SUMÁRIO EXECUTIVO DA BACIA</h3><table class="timbrado-table"><tr><td><strong>Total de Trechos Analisados:</strong> <span id="tmbTotTrechos"></span></td><td><strong>Trechos Conformes:</strong> <span id="tmbTotConf"></span></td></tr><tr><td><strong>Reprovados em Projeto (Etapa 1):</strong> <span id="tmbTotRepProj"></span></td><td><strong>Reprovados em Execução (Etapa 2):</strong> <span id="tmbTotRepObra"></span></td></tr></table></div>
+  <div class="timbrado-box"><h3>2. TABELA MASTER DE AUDITORIA HIDRÁULICA</h3><table class="timbrado-table"><thead><tr><th>Identificação</th><th>DN (mm)</th><th>I (m/m)</th><th>Q (L/s)</th><th>y/D (%)</th><th>Tau (Pa)</th><th>V (m/s)</th><th>Parecer</th></tr></thead><tbody id="tmbTabelaMaster"></tbody></table></div>
+  <div class="timbrado-status" id="tmbGeralStatusFinal"></div>
+  <div class="timbrado-footer"><div>Responsável Técnico: Sâmia Oliveira e Equipe de Engenharia Civil (UVA)</div><div>Normas de referência: ABNT NBR 9649 / NBR 17163</div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-"use strict";
-
-function num(id){return Number(document.getElementById(id).value)}
-function texto(id){return document.getElementById(id).value.trim()}
-function fmt(x,d=2){return Number.isFinite(x)?x.toFixed(d):"—"}
-
-function geometriaCircular(D,y){
-  const r=D/2;
-  const theta=2*Math.acos(Math.max(-1,Math.min(1,(r-y)/r)));
-  const A=(r*r/2)*(theta-Math.sin(theta));
-  const P=r*theta;
-  return {A,P,R:P>0?A/P:0,theta};
+/* Núcleo de cálculo preservado da versão fornecida; a reformulação concentra-se na interface. */
+let listaTrechos=[
+{id:"Trecho 01 (PV01 - PV02)",dn:150,decliv:0.0055,cotaMont:100.000,cotaJus:99.725,q:2.50,n:0.013},
+{id:"Trecho 02 (PV02 - PV03)",dn:150,decliv:0.0040,cotaMont:99.725,cotaJus:99.525,q:2.10,n:0.013},
+{id:"Trecho 03 (PV03 - PV04)",dn:100,decliv:0.0020,cotaMont:99.525,cotaJus:99.425,q:1.50,n:0.013}
+];
+let trechoAtualIndex=0;
+function calcGeometria(theta,D){const A=(Math.pow(D,2)/8)*(theta-Math.sin(theta));const P=(D/2)*theta;const Rh=P>0?A/P:0;const y=(D/2)*(1-Math.cos(theta/2));return{A,P,Rh,y};}
+function fManning(theta,D,I0,n,Q){const{A,Rh}=calcGeometria(theta,D);const Q_calc=(1/n)*A*Math.pow(Rh,2/3)*Math.sqrt(I0);return Q_calc-Q;}
+function calcQCheio(D,I0,n){const A_cheio=(Math.PI*Math.pow(D,2))/4;const Rh_cheio=D/4;return(1/n)*A_cheio*Math.pow(Rh_cheio,2/3)*Math.sqrt(I0);}
+function resolverNewton(D,I0,n,Q,tol=1e-7,maxIt=50){let theta=Math.PI;const h=1e-5;let it=0;for(it=1;it<=maxIt;it++){const f=fManning(theta,D,I0,n,Q);if(Math.abs(f)<tol)break;const df=(fManning(theta+h,D,I0,n,Q)-fManning(theta-h,D,I0,n,Q))/(2*h);if(Math.abs(df)<1e-12)break;const delta=f/df;theta-=delta;if(theta<=0.01)theta=0.01;if(theta>=2*Math.PI*.999)theta=2*Math.PI*.999;if(Math.abs(delta)<tol)break;}return{theta,iteracoes:it,convergiu:it<maxIt};}
+function resolverSecante(D,I0,n,Q,tol=1e-7,maxIt=50){let x0=Math.PI*.8,x1=Math.PI*1.2,it=0;for(it=1;it<=maxIt;it++){const f0=fManning(x0,D,I0,n,Q),f1=fManning(x1,D,I0,n,Q);if(Math.abs(f1)<tol||Math.abs(f1-f0)<1e-12)break;const x2=x1-f1*(x1-x0)/(f1-f0);x0=x1;x1=x2;if(x1<=.01)x1=.01;if(x1>=2*Math.PI*.999)x1=2*Math.PI*.999;}return{theta:x1,iteracoes:it,convergiu:it<maxIt};}
+function resolverBisseccao(D,I0,n,Q,tol=1e-7,maxIt=50){let a=.01,b=2*Math.PI*.999,m=0,it=0;for(it=1;it<=maxIt;it++){m=.5*(a+b);const fm=fManning(m,D,I0,n,Q);if(Math.abs(fm)<tol||.5*(b-a)<tol)break;if(fManning(a,D,I0,n,Q)*fm<0)b=m;else a=m;}return{theta:m,iteracoes:it,convergiu:it<maxIt};}
+function auditarTrechoCompleto(t){const D=t.dn/1000,Q_m3s=t.q/1000,metodo=document.getElementById("selectMetodo").value;const passDN=t.dn>=100,I_min=.0055*Math.pow(t.q,-.47),passDecliv=t.decliv>=I_min,passGravidade=t.cotaMont>t.cotaJus,projetoValido=passDN&&passDecliv&&passGravidade;if(!projetoValido)return{etapa1Valida:false,passDN,passDecliv,passGravidade,I_min,bloqueado:true,motivoBloqueio:!passDN?"Diâmetro < 100 mm":!passGravidade?"Inversão topográfica":"Declividade < I_min"};const Q_cheio=calcQCheio(D,t.decliv,t.n);if(Q_m3s>=Q_cheio*1.05)return{etapa1Valida:true,passDN,passDecliv,passGravidade,I_min,bloqueado:true,afogado:true,motivoBloqueio:"Conduto Afogado / Sob Pressão"};let sol;if(metodo==="secante")sol=resolverSecante(D,t.decliv,t.n,Q_m3s);else if(metodo==="bisseccao")sol=resolverBisseccao(D,t.decliv,t.n,Q_m3s);else sol=resolverNewton(D,t.decliv,t.n,Q_m3s);const{A,Rh,y}=calcGeometria(sol.theta,D),yd=y/D,V=A>0?Q_m3s/A:0,tau=9810*Rh*t.decliv,passYd=yd<=.75,passTau=tau>=1,passV=V>=.60&&V<=5,obraAprovada=passYd&&passTau&&passV;return{etapa1Valida:true,bloqueado:false,afogado:false,passDN,passDecliv,passGravidade,I_min,y,yd,V,tau,iteracoes:sol.iteracoes,passYd,passTau,passV,obraAprovada};}
+function atualizarInterface(){
+ const t=listaTrechos[trechoAtualIndex];if(!t)return;const res=auditarTrechoCompleto(t);
+ document.getElementById("trechoId").value=t.id;document.getElementById("inputDn").value=t.dn;document.getElementById("inputDecliv").value=t.decliv;document.getElementById("inputCotaMont").value=t.cotaMont.toFixed(3);document.getElementById("inputCotaJus").value=t.cotaJus.toFixed(3);document.getElementById("inputQ").value=t.q.toFixed(2);
+ const valBox=document.getElementById("validacaoProjetoBox"),badge=document.getElementById("statusGeralBadge"),parecer=document.getElementById("parecerTexto"),msg=document.getElementById("msg3dBloqueado");
+ if(res.bloqueado){
+  valBox.className="validation fail";valBox.innerHTML=`<div class="validation-icon">!</div><div><strong>Projeto reprovado na etapa preliminar</strong><p>${res.motivoBloqueio}</p></div>`;
+  badge.style.color="var(--red)";badge.style.borderColor="rgba(251,113,133,.3)";badge.style.background="rgba(251,113,133,.1)";badge.textContent=res.afogado?"CONDUTO AFOGADO":"TRECHO BLOQUEADO";
+  ["kpiY","kpiV","kpiTau","kpiIt"].forEach(id=>document.getElementById(id).textContent="—");document.getElementById("kpiYRatio").textContent="Análise bloqueada";
+  parecer.textContent=`LAUDO TÉCNICO · AUDITORIA HIDRÁULICA\nTrecho: ${t.id}\n${"─".repeat(35)}\nStatus: AUDITORIA SUSPENSA\nMotivo: ${res.motivoBloqueio}\n\nA etapa de cálculo foi bloqueada pela validação preliminar.`;
+  msg.style.display="block";document.getElementById("msg3dDetalhe").textContent=res.motivoBloqueio;atualizarVisualizacao3D(t.dn/1000,0);return;
+ }
+ msg.style.display="none";valBox.className="validation";valBox.innerHTML=`<div class="validation-icon">✓</div><div><strong>Parâmetros preliminares aprovados</strong><p>DN ${t.dn} mm · Declividade ${t.decliv.toFixed(4)} m/m · Escoamento por gravidade.</p></div>`;
+ badge.style.color=res.obraAprovada?"var(--green)":"var(--red)";badge.style.borderColor=res.obraAprovada?"rgba(52,211,153,.3)":"rgba(251,113,133,.3)";badge.style.background=res.obraAprovada?"rgba(52,211,153,.1)":"rgba(251,113,133,.1)";badge.textContent=res.obraAprovada?"TRECHO CONFORME":"INCONFORMIDADE NA ETAPA 2";
+ document.getElementById("kpiY").textContent=(res.y*100).toFixed(2)+" cm";document.getElementById("kpiYRatio").textContent=`y/D: ${(res.yd*100).toFixed(1)}%`;document.getElementById("kpiV").textContent=res.V.toFixed(2)+" m/s";document.getElementById("kpiTau").textContent=res.tau.toFixed(2)+" Pa";document.getElementById("kpiIt").textContent=res.iteracoes;
+ const metodo=document.getElementById("selectMetodo").value;document.getElementById("kpiMetodoNome").textContent=metodo==="newton"?"Newton–Raphson":metodo==="secante"?"Secante":"Bissecção";
+ parecer.textContent=`LAUDO TÉCNICO · AUDITORIA HIDRÁULICA\nIdentificação: ${t.id}\n${"─".repeat(35)}\nLâmina líquida (y): ${(res.y*100).toFixed(2)} cm\nRelação y/D: ${(res.yd*100).toFixed(1)}%  [${res.passYd?"CONFORME":"REPROVADO"}]\nVelocidade (V): ${res.V.toFixed(2)} m/s  [${res.passV?"CONFORME":"REPROVADO"}]\nTensão trativa (τ): ${res.tau.toFixed(2)} Pa  [${res.passTau?"CONFORME":"REPROVADO"}]\nIterações: ${res.iteracoes}\nMétodo numérico: ${document.getElementById("kpiMetodoNome").textContent}\n${"─".repeat(35)}\nPARECER: ${res.obraAprovada?"CONFORME":"REPROVADO NA ETAPA 2"}`;
+ atualizarVisualizacao3D(t.dn/1000,res.y);
 }
-
-function vazaoManning(D,y,S,n){
-  const g=geometriaCircular(D,y);
-  if(g.A<=0||g.R<=0||S<=0||n<=0)return 0;
-  return (1/n)*g.A*Math.pow(g.R,2/3)*Math.sqrt(S);
-}
-
-function resolverLamina(D,Q,S,n,limite){
-  let baixo=0.000001,alto=D*limite,iter=0;
-  const qMax=vazaoManning(D,alto,S,n);
-  if(Q>qMax)return {ok:false,qMax,iteracoes:0};
-  for(iter=1;iter<=100;iter++){
-    const meio=(baixo+alto)/2;
-    const q=vazaoManning(D,meio,S,n);
-    if(Math.abs(q-Q)<1e-10 || (alto-baixo)<1e-9){
-      return {ok:true,y:meio,iteracoes:iter,qMax};
-    }
-    if(q<Q)baixo=meio;else alto=meio;
-  }
-  return {ok:true,y:(baixo+alto)/2,iteracoes:iter,qMax};
-}
-
-function calcular(dados){
-  const {id,dn,decliv,q,n,limiteY,vmin,vmax,tauMin}=dados;
-  if(!id||![dn,decliv,q,n,limiteY,vmin,vmax,tauMin].every(Number.isFinite))
-    return {ok:false,motivo:"Preencha todos os campos com valores numéricos válidos."};
-  if(dn<=0||decliv<=0||q<=0||n<=0||limiteY<=0||limiteY>=1||vmin<0||vmax<=vmin||tauMin<0)
-    return {ok:false,motivo:"Há parâmetros fora do intervalo permitido. Confira DN, declividade, vazão, Manning e limites."};
-
-  const D=dn/1000,Q=q/1000;
-  const sol=resolverLamina(D,Q,decliv,n,limiteY);
-  if(!sol.ok)return {ok:false,motivo:`A vazão excede a capacidade calculada para y/D = ${limiteY.toFixed(2)}. Capacidade aproximada no limite: ${(sol.qMax*1000).toFixed(2)} L/s.`,qMax:sol.qMax};
-
-  const y=sol.y,g=geometriaCircular(D,y);
-  const V=Q/g.A;
-  const tau=1000*9.81*g.R*decliv;
-  const yd=y/D;
-  const passY=yd<=limiteY+1e-8;
-  const passV=V>=vmin&&V<=vmax;
-  const passTau=tau>=tauMin;
-  return {ok:true,id,dn,decliv,q,n,y,yd,V,tau,iteracoes:sol.iteracoes,passY,passV,passTau,conforme:passY&&passV&&passTau,A:g.A,R:g.R};
-}
-
-function auditar(){
-  const dados={
-    id:texto("idTrecho"),dn:num("inputDn"),decliv:num("inputDecliv"),q:num("inputQ"),
-    n:num("inputN"),limiteY:num("limiteY"),vmin:num("limiteVmin"),
-    vmax:num("limiteVmax"),tauMin:num("limiteTau")
-  };
-  const r=calcular(dados);
-  const status=document.getElementById("status");
-  const rel=document.getElementById("relatorio");
-  if(!r.ok){
-    status.className="status bad";status.textContent="NÃO CONFORME / CÁLCULO BLOQUEADO";
-    rel.textContent="TRECHO: "+dados.id+"\n\nMotivo: "+r.motivo+"\n\nVerifique os dados e os critérios do projeto.";
-    ["kpiY","kpiV","kpiTau","kpiIter"].forEach(id=>document.getElementById(id).textContent="—");
-    document.getElementById("kpiRatio").textContent="Cálculo bloqueado";
-    atualizar3D(dados.dn/1000,0);
-    return r;
-  }
-  status.className="status "+(r.conforme?"good":"bad");
-  status.textContent=r.conforme?"CONFORME AOS LIMITES INFORMADOS":"INCONFORMIDADE — REVISAR";
-  document.getElementById("kpiY").textContent=(r.y*100).toFixed(2)+" cm";
-  document.getElementById("kpiRatio").textContent="y/D: "+(r.yd*100).toFixed(1)+"%";
-  document.getElementById("kpiV").textContent=r.V.toFixed(2);
-  document.getElementById("kpiTau").textContent=r.tau.toFixed(2);
-  document.getElementById("kpiIter").textContent=r.iteracoes;
-  rel.textContent=
-`LAUDO TÉCNICO PRELIMINAR
-Trecho: ${r.id}
-Data: ${new Date().toLocaleDateString("pt-BR")}
-----------------------------------------
-Diâmetro nominal: ${r.dn} mm
-Declividade: ${r.decliv.toFixed(4)} m/m
-Vazão informada: ${r.q.toFixed(2)} L/s
-Coeficiente de Manning: ${r.n}
-Lâmina calculada: ${(r.y*100).toFixed(2)} cm
-Relação y/D: ${(r.yd*100).toFixed(1)}%
-Área molhada: ${r.A.toFixed(6)} m²
-Raio hidráulico: ${r.R.toFixed(5)} m
-Velocidade média: ${r.V.toFixed(3)} m/s — ${r.passV?"DENTRO":"FORA"} do limite informado
-Tensão trativa estimada: ${r.tau.toFixed(3)} Pa — ${r.passTau?"DENTRO":"FORA"} do limite informado
-Iterações: ${r.iteracoes}
-----------------------------------------
-PARECER PRELIMINAR: ${r.conforme?"CONFORME AOS LIMITES CONFIGURADOS":"INCONFORMIDADE A REVISAR"}
-
-Este resultado é uma ferramenta de apoio. Confirme critérios, condições de contorno, unidades, normas vigentes e responsabilidade técnica antes de emitir laudo oficial.`;
-  atualizar3D(r.dn/1000,r.y);
-  return r;
-}
-
-function restaurar(){
-  document.getElementById("idTrecho").value="Trecho 01 (PV01 - PV02)";
-  document.getElementById("inputDn").value="150";
-  document.getElementById("inputDecliv").value="0.0055";
-  document.getElementById("inputQ").value="2.50";
-  document.getElementById("inputN").value="0.013";
-  document.getElementById("limiteY").value="0.75";
-  document.getElementById("limiteVmin").value="0.60";
-  document.getElementById("limiteVmax").value="5.00";
-  document.getElementById("limiteTau").value="1.00";
-  auditar();
-}
-
-function importarCSV(event){
-  const file=event.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const linhas=reader.result.split(/\r?\n/).filter(x=>x.trim());
-    const sep=(linhas[0]||"").includes(";")?";":",";
-    const dados=[];
-    linhas.forEach((linha,i)=>{
-      if(i===0&&/trecho|id|dn/i.test(linha))return;
-      const c=linha.split(sep).map(x=>x.trim().replace(/^["']|["']$/g,""));
-      if(c.length<5)return;
-      const decimal=x=>Number(String(x).replace(",","."));
-      const item={id:c[0],dn:decimal(c[1]),decliv:decimal(c[2]),q:decimal(c[3]),n:decimal(c[4])};
-      if(item.id&&[item.dn,item.decliv,item.q,item.n].every(Number.isFinite))dados.push(item);
-    });
-    if(!dados.length){alert("Não encontrei linhas válidas. Use: trecho,DN_mm,declividade,vazao_Ls,Manning_n");return}
-    const resultados=dados.map(d=>({d,r:calcular({...d,limiteY:num("limiteY"),vmin:num("limiteVmin"),vmax:num("limiteVmax"),tauMin:num("limiteTau")})}));
-    document.getElementById("resumoLote").textContent=`Arquivo: ${file.name}\nTrechos carregados: ${dados.length}\nConformes: ${resultados.filter(x=>x.r.ok&&x.r.conforme).length}\nCom inconformidade ou cálculo bloqueado: ${resultados.filter(x=>!x.r.ok||!x.r.conforme).length}`;
-    document.getElementById("tabelaLote").innerHTML=resultados.map(({d,r})=>`<tr><td>${escapar(d.id)}</td><td>${d.dn}</td><td>${d.decliv}</td><td>${d.q}</td><td class="${r.ok&&r.conforme?"good":"bad"}">${r.ok?(r.conforme?"Conforme":"Revisar"):"Bloqueado"}</td></tr>`).join("");
-    alert("Importação concluída. Confira o resumo e a tabela.");
-  };
-  reader.readAsText(file);
-  event.target.value="";
-}
-function escapar(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-
-/* Visualização tridimensional */
-let cena,camera,renderer,controles,grupo,agua;
-function iniciar3D(){
-  const el=document.getElementById("viewport3d");
-  if(!window.THREE){el.textContent="Não foi possível carregar a biblioteca 3D. Confira sua conexão com a internet.";return}
-  cena=new THREE.Scene();cena.background=new THREE.Color(0x081321);
-  camera=new THREE.PerspectiveCamera(40,el.clientWidth/el.clientHeight,0.1,100);
-  camera.position.set(3,2.3,4);
-  renderer=new THREE.WebGLRenderer({antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(el.clientWidth,el.clientHeight);el.appendChild(renderer.domElement);
-  if(THREE.OrbitControls) {controles=new THREE.OrbitControls(camera,renderer.domElement);controles.enableDamping=true}
-  cena.add(new THREE.AmbientLight(0xffffff,.8));
-  const luz=new THREE.DirectionalLight(0x38bdf8,1.5);luz.position.set(4,5,5);cena.add(luz);
-  grupo=new THREE.Group();cena.add(grupo);
-  const D=1,L=3.8;
-  const tubo=new THREE.Mesh(new THREE.CylinderGeometry(D/2,D/2,L,64,1,true),new THREE.MeshPhysicalMaterial({color:0x9bb4ca,transparent:true,opacity:.25,side:THREE.DoubleSide,roughness:.25}));
-  tubo.rotation.x=Math.PI/2;grupo.add(tubo);
-  const aroMat=new THREE.MeshStandardMaterial({color:0x38bdf8,metalness:.5,roughness:.3});
-  [-L/2,L/2].forEach(z=>{const aro=new THREE.Mesh(new THREE.TorusGeometry(D/2,.025,12,64),aroMat);aro.position.z=z;grupo.add(aro)});
-  atualizar3D(.15,.05);
-  function animar(){requestAnimationFrame(animar);if(controles)controles.update();renderer.render(cena,camera)}
-  animar();
-  if(window.ResizeObserver)new ResizeObserver(()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}).observe(el);
-  else window.addEventListener("resize",()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)});
-}
-function atualizar3D(D,y){
-  if(!grupo)return;
-  if(agua){grupo.remove(agua);agua.geometry.dispose();agua.material.dispose();agua=null}
-  if(y<=0||D<=0)return;
-  const R=.495,L=3.78,yr=Math.max(.01,Math.min(.99,y/D));
-  const theta=2*Math.acos(1-2*yr),inicio=-Math.PI/2-theta/2;
-  const forma=new THREE.Shape();forma.moveTo(R*Math.cos(inicio),R*Math.sin(inicio));
-  for(let i=1;i<=64;i++){const a=inicio+i/64*theta;forma.lineTo(R*Math.cos(a),R*Math.sin(a))}
-  forma.closePath();
-  const geo=new THREE.ExtrudeGeometry(forma,{depth:L,bevelEnabled:false,steps:1});geo.translate(0,0,-L/2);
-  agua=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x0ea5e9,transparent:true,opacity:.88,side:THREE.DoubleSide}));
-  grupo.add(agua);
-}
-
-window.addEventListener("load",()=>{iniciar3D();auditar()});
+function atualizarTrechoManual(){const t=listaTrechos[trechoAtualIndex];const vals=["inputDn","inputDecliv","inputCotaMont","inputCotaJus","inputQ"].map(id=>parseFloat(document.getElementById(id).value));if(vals.some(v=>!Number.isFinite(v)))return;[t.dn,t.decliv,t.cotaMont,t.cotaJus,t.q]=vals;atualizarInterface();}
+function mudarTrechoSelecionado(){trechoAtualIndex=parseInt(document.getElementById("selectTrecho").value,10);atualizarInterface();}
+function atualizarSelectTrechos(){const sel=document.getElementById("selectTrecho");sel.innerHTML="";listaTrechos.forEach((t,i)=>{const opt=document.createElement("option");opt.value=i;opt.textContent=t.id;sel.appendChild(opt)});sel.value=trechoAtualIndex;}
+function imprimirLaudoGeralLote(){document.getElementById("tmbGeralData").textContent=new Date().toLocaleDateString("pt-BR");let aprovados=0,reprovadosProj=0,reprovadosObra=0,html="";listaTrechos.forEach(t=>{const r=auditarTrechoCompleto(t);let status,color;if(r.bloqueado){reprovadosProj++;status="Reprovado (Projeto)";color="#991b1b"}else if(r.obraAprovada){aprovados++;status="Conforme";color="#166534"}else{reprovadosObra++;status="Reprovado (Obra)";color="#b45309"}html+=`<tr><td><strong>${escaparHtml(t.id)}</strong></td><td>${t.dn}</td><td>${t.decliv.toFixed(4)}</td><td>${t.q.toFixed(2)}</td><td>${r.bloqueado?"—":(r.yd*100).toFixed(1)+"%"}</td><td>${r.bloqueado?"—":r.tau.toFixed(2)}</td><td>${r.bloqueado?"—":r.V.toFixed(2)}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`});document.getElementById("tmbTotTrechos").textContent=listaTrechos.length;document.getElementById("tmbTotConf").textContent=aprovados;document.getElementById("tmbTotRepProj").textContent=reprovadosProj;document.getElementById("tmbTotRepObra").textContent=reprovadosObra;document.getElementById("tmbTabelaMaster").innerHTML=html;const sf=document.getElementById("tmbGeralStatusFinal");if(!reprovadosProj&&!reprovadosObra){sf.className="timbrado-status timbrado-aprovado";sf.textContent="PARECER GERAL DA BACIA: 100% HOMOLOGADO E CONFORME"}else{sf.className="timbrado-status timbrado-reprovado";sf.textContent=`PARECER GERAL DA BACIA: CONTÉM INCONFORMIDADES (${reprovadosProj+reprovadosObra} trechos pendentes)`}fecharModalLote();window.print();}
+function escaparHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function importarCsv(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const lines=e.target.result.split(/\r?\n/);const novos=[];for(let i=1;i<lines.length;i++){const l=lines[i].trim();if(!l)continue;const cols=l.split(",");if(cols.length>=6){const row={id:cols[0].trim().replace(/^["']|["']$/g,""),dn:parseFloat(cols[1]),decliv:parseFloat(cols[2]),cotaMont:parseFloat(cols[3]),cotaJus:parseFloat(cols[4]),q:parseFloat(cols[5]),n:.013};if(row.id&&[row.dn,row.decliv,row.cotaMont,row.cotaJus,row.q].every(Number.isFinite))novos.push(row)}}if(novos.length){listaTrechos=novos;trechoAtualIndex=0;atualizarSelectTrechos();atualizarInterface();abrirModalLote()}else alert("Não foram encontrados registros válidos. Confira as seis colunas do CSV.")};reader.readAsText(file);event.target.value="";}
+function abrirModalLote(){let a=0,p=0,o=0;listaTrechos.forEach(t=>{const r=auditarTrechoCompleto(t);if(r.bloqueado)p++;else if(r.obraAprovada)a++;else o++});document.getElementById("modalLoteConteudo").innerHTML=`<strong>Total de trechos:</strong> ${listaTrechos.length}<br><span style="color:var(--green)">● Conformes: ${a}</span><br><span style="color:var(--red)">● Reprovados em projeto (etapa 1): ${p}</span><br><span style="color:var(--amber)">● Reprovados em execução (etapa 2): ${o}</span><br><br>O relatório consolidado reúne os parâmetros e pareceres de todos os trechos carregados.`;document.getElementById("modalLote").style.display="flex";}
+function fecharModalLote(){document.getElementById("modalLote").style.display="none";}
+let scene,camera,renderer,controls,mainGroup,waterMesh;const R_BASE=1,L_BASE=4.2;
+function init3D(){const container=document.getElementById("viewport3d"),w=container.clientWidth||300,h=container.clientHeight||300;scene=new THREE.Scene();scene.background=new THREE.Color(0x091321);camera=new THREE.PerspectiveCamera(35,w/h,.1,100);camera.position.set(4,2.5,4.5);renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setSize(w,h);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));container.appendChild(renderer.domElement);controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.target.set(0,0,0);controls.minDistance=3;controls.maxDistance=8;scene.add(new THREE.AmbientLight(0xffffff,.95));const dl=new THREE.DirectionalLight(0x38bdf8,1.35);dl.position.set(6,8,8);scene.add(dl);const fill=new THREE.PointLight(0x34d399,.55,15);fill.position.set(-4,-2,-2);scene.add(fill);mainGroup=new THREE.Group();scene.add(mainGroup);const pipeGeo=new THREE.CylinderGeometry(R_BASE,R_BASE,L_BASE,64,1,true);pipeGeo.rotateX(Math.PI/2);const pipeMat=new THREE.MeshPhysicalMaterial({color:0x9bb4ca,transparent:true,opacity:.22,roughness:.18,transmission:.55,side:THREE.DoubleSide});mainGroup.add(new THREE.Mesh(pipeGeo,pipeMat));const ringMat=new THREE.MeshStandardMaterial({color:0x38bdf8,metalness:.55,roughness:.24});[-L_BASE/2,L_BASE/2].forEach(z=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(R_BASE,.035,16,64),ringMat);ring.position.z=z;mainGroup.add(ring)});const yLim=-R_BASE+2*R_BASE*.75,xLim=Math.sqrt(Math.max(0,R_BASE*R_BASE-yLim*yLim)),lm=new THREE.LineDashedMaterial({color:0xfb7185,dashSize:.15,gapSize:.1});[-xLim,xLim].forEach(x=>{const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,yLim,-L_BASE/2),new THREE.Vector3(x,yLim,L_BASE/2)]),lm);line.computeLineDistances();mainGroup.add(line)});atualizarVisualizacao3D(.15,.048);animate3D();if("ResizeObserver"in window){new ResizeObserver(()=>redimensionar3D()).observe(container)}else window.addEventListener("resize",redimensionar3D);}
+function redimensionar3D(){if(!renderer||!camera)return;const c=document.getElementById("viewport3d"),w=c.clientWidth,h=c.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+function atualizarVisualizacao3D(D,y){if(!mainGroup)return;if(waterMesh){mainGroup.remove(waterMesh);waterMesh.geometry.dispose();waterMesh.material.dispose();waterMesh=null}if(y<=.001||D<=0)return;const yRel=Math.min(Math.max(y/D,.01),.99),R=R_BASE*.996,L=L_BASE*.998,theta=2*Math.acos(Math.max(-1,Math.min(1,1-2*yRel))),phiStart=-Math.PI/2-theta/2,shape=new THREE.Shape(),n=64;shape.moveTo(R*Math.cos(phiStart),R*Math.sin(phiStart));for(let i=1;i<=n;i++){const phi=phiStart+i/n*theta;shape.lineTo(R*Math.cos(phi),R*Math.sin(phi))}shape.closePath();const geo=new THREE.ExtrudeGeometry(shape,{steps:1,depth:L,bevelEnabled:false});geo.translate(0,0,-L/2);waterMesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x0ea5e9,roughness:.16,metalness:.04,transparent:true,opacity:.88,side:THREE.DoubleSide}));mainGroup.add(waterMesh);}
+function animate3D(){requestAnimationFrame(animate3D);if(controls)controls.update();if(renderer&&scene&&camera)renderer.render(scene,camera);}
+window.addEventListener("load",()=>{init3D();atualizarSelectTrechos();atualizarInterface();});
+document.getElementById("modalLote").addEventListener("click",e=>{if(e.target.id==="modalLote")fecharModalLote()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")fecharModalLote()});
 </script>
 </body>
 </html>
